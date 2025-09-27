@@ -1,10 +1,11 @@
 <template>
     <el-container class="main-container">
         <el-container v-if="userInfo.username.length > 0">
-            <el-header height="80" class="header-container">
+            <el-header height="120" class="header-container">
                 <div class="flex justify-between items-center h-full px-4">
                     <div>
-                        <el-image style="height: 50px; margin-left: 10px;" src="/conlinkinfo.png" />
+                        <el-image style="height: 55px; margin-left: 20px; margin-top: 5px; margin-bottom: 5px;" src="/SDU logo(White).png" />
+                        <el-image style="height: 45px; margin-left: 20px; margin-top: 5px; margin-bottom: 8px;" src="/SDUlogo(White).png" />
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="username-text">{{ userInfo.username }}</span>
@@ -145,7 +146,7 @@ const changeUser = async (type: string) => {
 
 /* Header 样式 */
 .header-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #771010;
     border-bottom: 3px solid #e0e6ed;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
