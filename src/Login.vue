@@ -1,13 +1,15 @@
 <template>
   <div class="login-container">
     <div class="login-wrapper">
+      <el-image style="height: 60px; margin-left:107px;" src="/山大logo.png"/>
+      <div class="login-hd">学生信息管理系统</div>
       <el-form :model="loginReq" class="login-form" label-width="120px">
-        <div class="login-title">用户登录</div>
+        <!--<div class="login-title">用户登录</div>-->
         <el-form-item label="用户名">
           <el-input v-model="loginReq.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码">
-          <el-input type="password" v-model="loginReq.password" placeholder="请输入密码" />
+          <el-input type="password" v-model="loginReq.password" placeholder="请输入密码 " />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="login-button" @click="loginSubmit()">登录</el-button>
@@ -39,19 +41,18 @@ const loginSubmit = async () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url('/login_pic.png');
-  background-size: 100% 100%;
+  background: linear-gradient(135deg, #e6f0fa 0%, #f0f5f7 100%);
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  image-rendering: high-quality;
-  image-rendering: -webkit-optimize-contrast;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
 .login-wrapper {
-  margin-left: 20%;
+  margin: auto;
   background: rgba(255, 255, 255, 0.95);
   padding: 40px;
   border-radius: 12px;
@@ -62,7 +63,7 @@ const loginSubmit = async () => {
 }
 
 .login-form {
-  width: 100%;
+  width: 95%;
 }
 
 .login-title {
@@ -79,6 +80,12 @@ const loginSubmit = async () => {
   font-weight: 600;
 }
 
+.login-form :deep(.el-input) {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
 .login-form :deep(.el-input__inner) {
   border-radius: 8px;
   border: 2px solid #e1e8ed;
@@ -90,11 +97,18 @@ const loginSubmit = async () => {
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
+.login-form :deep(.el-form-item) {
+  border: none;
+  margin-bottom: 20px;
+}
+
 .login-button {
-  width: 100%;
+  margin-right: 40px;
+  margin-top: 18px;
+  width: 60%;
   height: 45px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #771010;
   border: none;
   font-size: 16px;
   font-weight: 600;
@@ -111,6 +125,14 @@ const loginSubmit = async () => {
 .login-wrapper {
   animation: slideIn 0.6s ease-out;
 }
+.login-hd{
+  text-align: center;
+  font-family: "华文中宋";
+  font-weight: bold;
+  font-size: 28px;
+  color: #771010;
+  margin-bottom: 30px;
+}
 
 @keyframes slideIn {
   from {
@@ -123,4 +145,5 @@ const loginSubmit = async () => {
     transform: translateY(0);
   }
 }
+
 </style>
