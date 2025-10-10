@@ -9,7 +9,10 @@
           <el-input v-model="loginReq.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码">
-          <el-input type="password" v-model="loginReq.password" placeholder="请输入密码 " />
+          <el-input type="password" v-model="loginReq.password" placeholder="请输入密码 " style="margin-bottom: 0;"/>
+        </el-form-item>
+        <el-form-item>
+          <el-link type="primary" class="register-link" @click="">还没有账号？点此注册</el-link>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="login-button" @click="loginSubmit()">登录</el-button>
@@ -104,7 +107,7 @@ const loginSubmit = async () => {
 
 .login-button {
   margin-right: 40px;
-  margin-top: 18px;
+  margin-top: 0px;
   width: 60%;
   height: 45px;
   border-radius: 8px;
@@ -121,17 +124,25 @@ const loginSubmit = async () => {
   box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
+.register-link {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 120px;
+  font-size: smaller;
+}
+
 /* 添加一些动画效果 */
 .login-wrapper {
   animation: slideIn 0.6s ease-out;
 }
 .login-hd{
   text-align: center;
-  font-family: "华文中宋";
+  font-family: "微软雅黑";
   font-weight: bold;
   font-size: 28px;
   color: #771010;
   margin-bottom: 30px;
+  margin-top: 10px;
 }
 
 @keyframes slideIn {
