@@ -1,4 +1,5 @@
 import { LoginRequest } from "~/infrastructure/models/login";
+import { RegisterRequest } from "~/infrastructure/models/register";
 import { IStoreService } from "~/infrastructure/boundaries/store-service";
 import { ID_STORE_SERVICE, ID_BASE_SERVICE, ID_LOGIN_SERVICE } from "~/types";
 import { IBaseService } from "~/infrastructure/boundaries/base-service";

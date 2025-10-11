@@ -17,27 +17,30 @@
           <el-link type="primary" class="register-link" @click="toRegister()">点此注册</el-link>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" class="login-button" @click="loginSubmit()">登录</el-button>
+          <el-button type="primary" class="login-button" @click="loginSubmit()" :loading="isLoading">{{ isLoading ? '登录中...' : '登录' }}</el-button>
         </el-form-item>
       </el-form>
     </div>
   </div>
-  <div class="register-dialog">
+  <div class="register-dialog" rule="">
     <el-dialog class="register-dialog" title="用户注册" v-model="dialogVisible" v-show="dialogVisible">
-      <el-form :model="registerReq" class="register-form" label-width="120px" style="margin-top: 20px">
-        <el-form-item label="用户名" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+      <el-form :model="registerReq" :rules="registerRules" ref="registerFormRef" class="register-form" label-width="120px" style="margin-top: 20px">
+        <el-form-item label="用户名" prop="username" style="font-family:Microsoft YaHei, serif; font-weight: bold">
           <el-input v-model="registerReq.username" placeholder="请输入用户名" class="register-input"/>
         </el-form-item>
-        <el-form-item label="密码" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+        <el-form-item label="密码" prop="password" style="font-family:Microsoft YaHei, serif; font-weight: bold">
           <el-input type="password" v-model="registerReq.password" placeholder="请输入密码 " style="margin-bottom: 0;" class="register-input"/>
         </el-form-item>
-        <el-form-item label="真实姓名" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+        <el-form-item label="真实姓名" prop="perName" style="font-family:Microsoft YaHei, serif; font-weight: bold">
           <el-input v-model="registerReq.perName" placeholder="请输入真实姓名" class="register-input" />
         </el-form-item>
-        <el-form-item label="角色" style="font-family:Microsoft YaHei, serif; font-weight: bold">
-          <el-select v-model="registerReq.role" placeholder="请选择角色" style="width: 250px"></el-select>
+        <el-form-item label="角色" prop="role" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-select v-model="registerReq.role" placeholder="请选择角色" style="width: 250px">
+            <el-option label="学生" value="学生"></el-option>
+            <el-option label="教师" value="教师"></el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="验证码" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+        <el-form-item label="验证码" prop="code" style="font-family:Microsoft YaHei, serif; font-weight: bold">
           <el-input v-model="registerReq.code" placeholder="请输入验证码（验证码功能尚等待完善）" class="register-input" />
         </el-form-item>
         <el-form-item>
@@ -49,24 +52,72 @@
 </template>
 
 <script lang="ts" setup>
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElForm } from 'element-plus'
 import { container } from '~/inverfiy.config';
 import { ID_APP_PRESENTER, ID_LOGIN_SERVICE } from '~/types';
 import { AppPresenter } from "~/infrastructure/presenters/app-presenter";
-import {reactive, ref} from 'vue'
+import {RegisterServiceImpl} from "~/infrastructure/services/register-service-impl";
+import {reactive, ref, nextTick}from 'vue'
 import { LoginRequest } from './infrastructure/models/login';
 import { RegisterRequest } from './infrastructure/models/register';
 //const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456', code: '' });
 const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456', code: '' });
-const registerReq: RegisterRequest = reactive({ username: '', password: '', perName: '', role: '', code: '' });
+//const registerReq: RegisterRequest = reactive({ username: '', password: '', perName: '', role: '', code: '' });
+//开发中预置registerReq的值来调试：
+const registerReq: RegisterRequest = reactive({ username: '202400002222', password: '123456', perName: '测试', role: '学生', code: '' });
 const dialogVisible = ref(false);
+const registerFormRef = ref<InstanceType<typeof ElForm>>()
+
+const registerRules = reactive({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { len: 12, message: '用户名须为12位学号', trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 18, message: '密码长度在 6 到 18 个字符', trigger: 'blur' },
+  ],
+  perName: [
+    { required: true, message: '请输入真实姓名', trigger: 'blur' },
+    { min: 2, max: 10, message: '真实姓名长度在 2 到 10 个字符', trigger: 'blur' },
+  ],
+  role: [
+    { required: true, message: '请选择角色', trigger: 'change' },
+  ],
+  // code: [
+  //   { required: true, message: '请输入验证码', trigger: 'blur' },
+  //   { len: 6, message: '验证码长度为 6 个字符', trigger: 'blur' },
+  // ],
+})
 
 const appPresenter = container.get<AppPresenter>(ID_APP_PRESENTER);
+const isLoading = ref(false);
 const loginSubmit = async () => {
-  await appPresenter.enterApp(loginReq);
+  try {
+    isLoading.value = true;
+    await appPresenter.enterApp(loginReq);
+  } catch (error) {
+    console.error('登录失败:', error);
+    ElMessage.error('登录失败，请重试');
+  } finally {
+    isLoading.value = false;
+  }
 };
 const toRegister = () =>{
+  // 重置表单数据
+  registerReq.username = '202400002222';
+  registerReq.password = '123456';
+  registerReq.perName = '测试';
+  registerReq.role = '学生';
+  registerReq.code = '';
+
   dialogVisible.value = true;
+
+  // 清除校验信息，确保在对话框渲染完成后执行
+  nextTick(() => {
+    registerFormRef.value?.resetFields();
+  });
+
   ElMessage.info('正在开发注册')
 }
 
@@ -74,9 +125,25 @@ const toForgetPassword = () => {
   ElMessage.info('正在开发忘记密码');
 }
 
+//以下：点击注册键后的注册表单提交
 const registerSubmit = async () => {
-  ElMessage.info('正在开发注册')
+  if (!registerFormRef.value) return
+  const valid = await registerFormRef.value.validate();
+  if (valid) {
+    const registerReq1 = {...registerReq};
+    if(registerReq.role === '学生')
+      registerReq1.role = 'STUDENT';
+    if(registerReq.role === '教师')
+      registerReq1.role = 'TEACHER';
+    ElMessage.info('正在开发注册')
+    // 待填充注册逻辑
+    const registerService = new RegisterServiceImpl();
+    await registerService.register(registerReq1);
+  } else {
+    ElMessage.error('请检查输入信息')
+  }
 }
+
 
 </script>
 
@@ -184,7 +251,7 @@ const registerSubmit = async () => {
 }
 
 .forget-link {
-  margin: 0 5px 0 25px;
+  margin: 0 10px 0 20px;
   font-size: smaller;
 }
 
@@ -228,7 +295,7 @@ const registerSubmit = async () => {
 
 .register-input{
   width: 250px;
-  border-radius: 12px;
+  border-radius: 50px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   font-family: "Microsoft YaHei",serif;
 }
