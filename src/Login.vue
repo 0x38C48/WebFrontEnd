@@ -3,16 +3,18 @@
     <div class="login-wrapper">
       <el-image style="height: 60px; margin-left:107px;" src="/山大logo.png"/>
       <div class="login-hd">学生信息管理系统</div>
-      <el-form :model="loginReq" class="login-form" label-width="120px">
+      <el-form :model="loginReq" class="login-form" label-width="120px" >
         <!--<div class="login-title">用户登录</div>-->
         <el-form-item label="用户名">
-          <el-input v-model="loginReq.username" placeholder="请输入用户名" />
+          <el-input v-model="loginReq.username" placeholder="请输入用户名" class="login-input" />
         </el-form-item>
         <el-form-item label="密码">
-          <el-input type="password" v-model="loginReq.password" placeholder="请输入密码 " style="margin-bottom: 0;"/>
+          <el-input type="password" v-model="loginReq.password" placeholder="请输入密码 " style="margin-bottom: 0;" class="login-input"/>
         </el-form-item>
         <el-form-item>
-          <el-link type="primary" class="register-link" @click="">还没有账号？点此注册</el-link>
+          <el-link type="primary" class="forget-link" @click="toForgetPassword()">忘记密码</el-link>
+          <span color="#409EFF">|</span>
+          <el-link type="primary" class="register-link" @click="toRegister()">点此注册</el-link>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="login-button" @click="loginSubmit()">登录</el-button>
@@ -20,20 +22,61 @@
       </el-form>
     </div>
   </div>
+  <div class="register-dialog">
+    <el-dialog class="register-dialog" title="用户注册" v-model="dialogVisible" v-show="dialogVisible">
+      <el-form :model="registerReq" class="register-form" label-width="120px" style="margin-top: 20px">
+        <el-form-item label="用户名" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="registerReq.username" placeholder="请输入用户名" class="register-input"/>
+        </el-form-item>
+        <el-form-item label="密码" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input type="password" v-model="registerReq.password" placeholder="请输入密码 " style="margin-bottom: 0;" class="register-input"/>
+        </el-form-item>
+        <el-form-item label="真实姓名" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="registerReq.perName" placeholder="请输入真实姓名" class="register-input" />
+        </el-form-item>
+        <el-form-item label="角色" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-select v-model="registerReq.role" placeholder="请选择角色" style="width: 250px"></el-select>
+        </el-form-item>
+        <el-form-item label="验证码" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="registerReq.code" placeholder="请输入验证码（验证码功能尚等待完善）" class="register-input" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="register-button" @click="registerSubmit()">注册</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
 </template>
+
 <script lang="ts" setup>
+import { ElMessage } from 'element-plus'
 import { container } from '~/inverfiy.config';
 import { ID_APP_PRESENTER, ID_LOGIN_SERVICE } from '~/types';
 import { AppPresenter } from "~/infrastructure/presenters/app-presenter";
-import { reactive } from 'vue'
+import {reactive, ref} from 'vue'
 import { LoginRequest } from './infrastructure/models/login';
+import { RegisterRequest } from './infrastructure/models/register';
 //const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456', code: '' });
 const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456', code: '' });
+const registerReq: RegisterRequest = reactive({ username: '', password: '', perName: '', role: '', code: '' });
+const dialogVisible = ref(false);
 
 const appPresenter = container.get<AppPresenter>(ID_APP_PRESENTER);
 const loginSubmit = async () => {
   await appPresenter.enterApp(loginReq);
 };
+const toRegister = () =>{
+  dialogVisible.value = true;
+  ElMessage.info('正在开发注册')
+}
+
+const toForgetPassword = () => {
+  ElMessage.info('正在开发忘记密码');
+}
+
+const registerSubmit = async () => {
+  ElMessage.info('正在开发注册')
+}
 
 </script>
 
@@ -105,6 +148,15 @@ const loginSubmit = async () => {
   margin-bottom: 20px;
 }
 
+.login-input {
+  width: 250px;
+}
+
+.el-form-item__content {
+  display: flex;
+  justify-content: center;
+}
+
 .login-button {
   margin-right: 40px;
   margin-top: 0px;
@@ -127,7 +179,12 @@ const loginSubmit = async () => {
 .register-link {
   margin-top: 0;
   margin-bottom: 0;
-  margin-left: 120px;
+  margin-left: 10px;
+  font-size: smaller;
+}
+
+.forget-link {
+  margin: 0 5px 0 25px;
   font-size: smaller;
 }
 
@@ -143,6 +200,37 @@ const loginSubmit = async () => {
   color: #771010;
   margin-bottom: 30px;
   margin-top: 10px;
+}
+
+.register-dialog :deep(.el-dialog){
+  margin-top: 200px;
+  max-width: 90%;
+  border-radius: 12px;
+  width: 480px;
+  min-height: 435px;
+  font-family: 微软雅黑,serif;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.register-button{
+  justify-self: center;
+  margin-top: 20px;
+  width: 60%;
+  height: 40px;
+  border-radius: 8px;
+  background: #771010;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.register-input{
+  width: 250px;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  font-family: "Microsoft YaHei",serif;
 }
 
 @keyframes slideIn {
