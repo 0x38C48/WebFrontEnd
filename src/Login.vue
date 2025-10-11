@@ -139,6 +139,7 @@ const registerSubmit = async () => {
     // 待填充注册逻辑
     const registerService = new RegisterServiceImpl();
     await registerService.register(registerReq1);
+    dialogVisible.value = false; // 注册成功后关闭对话框
   } else {
     ElMessage.error('请检查输入信息')
   }
