@@ -40,8 +40,12 @@
             <el-option label="教师" value="教师"></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="邮箱" prop="email" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="registerReq.email" placeholder="请输入邮箱" class="register-input" />
+        </el-form-item>
         <el-form-item label="验证码" prop="code" style="font-family:Microsoft YaHei, serif; font-weight: bold">
-          <el-input v-model="registerReq.code" placeholder="请输入验证码（验证码功能尚等待完善）" class="register-input" />
+          <el-input v-model="registerReq.code" placeholder="请输入验证码" class="register-input" style="width: 150px; margin-right: 10px;" />
+          <el-image :src="captchaImageUrl" @click="updateCaptchaRegister" style="width: 100px; height: 40px; cursor: pointer;" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="register-button" @click="registerSubmit()">注册</el-button>
@@ -52,7 +56,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ElMessage, ElForm } from 'element-plus'
+import {ElMessage, ElForm, FormRules} from 'element-plus'
 import { container } from '~/inverfiy.config';
 import { ID_APP_PRESENTER, ID_LOGIN_SERVICE } from '~/types';
 import { AppPresenter } from "~/infrastructure/presenters/app-presenter";
@@ -60,15 +64,19 @@ import {RegisterServiceImpl} from "~/infrastructure/services/register-service-im
 import {reactive, ref, nextTick}from 'vue'
 import { LoginRequest } from './infrastructure/models/login';
 import { RegisterRequest } from './infrastructure/models/register';
+import {ValidateServiceImpl} from "~/infrastructure/services/validate-service-impl";
+import { ValidCodeRequest } from "~/infrastructure/models/valid-code-req";
 //const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456', code: '' });
 const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456', code: '' });
 //const registerReq: RegisterRequest = reactive({ username: '', password: '', perName: '', role: '', code: '' });
 //开发中预置registerReq的值来调试：
-const registerReq: RegisterRequest = reactive({ username: '202400002222', password: '123456', perName: '测试', role: '学生', code: '' });
+const valReq: ValidCodeRequest = reactive({username: '', password: '', perName: '', role: '', email: ''});
+const registerReq: RegisterRequest = reactive({ username: '202400002222', password: '123456', perName: '测试', role: '学生', email: 'test@example.com', code: '' });
 const dialogVisible = ref(false);
+const captchaImageUrl = ref(''); // 用于存储验证码图片的URL
 const registerFormRef = ref<InstanceType<typeof ElForm>>()
 
-const registerRules = reactive({
+const registerRules: FormRules<RegisterRequest> = reactive({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { len: 12, message: '用户名须为12位学号', trigger: 'blur' },
@@ -84,6 +92,10 @@ const registerRules = reactive({
   role: [
     { required: true, message: '请选择角色', trigger: 'change' },
   ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ],
   // code: [
   //   { required: true, message: '请输入验证码', trigger: 'blur' },
   //   { len: 6, message: '验证码长度为 6 个字符', trigger: 'blur' },
@@ -92,6 +104,23 @@ const registerRules = reactive({
 
 const appPresenter = container.get<AppPresenter>(ID_APP_PRESENTER);
 const isLoading = ref(false);
+
+//获取验证码
+const updateCaptchaRegister = () => {
+  //captchaImageUrl.value = `/auth/getValidateCode`;
+  const vReq = {...valReq};
+  vReq.username = registerReq.username;
+  vReq.password = registerReq.password;
+  vReq.perName = registerReq.perName;
+  vReq.role = registerReq.role;
+  vReq.email = registerReq.email;
+  const validateServiceImpl = new ValidateServiceImpl();
+  validateServiceImpl.getValidateCode(vReq).then(res => {
+    captchaImageUrl.value = res.data.img;
+  });
+  //ElMessage.success("成功更新验证码。");
+};
+
 const loginSubmit = async () => {
   try {
     isLoading.value = true;
@@ -105,13 +134,16 @@ const loginSubmit = async () => {
 };
 const toRegister = () =>{
   // 重置表单数据
+  //现实实践应该置空
   registerReq.username = '202400002222';
   registerReq.password = '123456';
   registerReq.perName = '测试';
   registerReq.role = '学生';
+  registerReq.email = 'test@example.com';
   registerReq.code = '';
 
   dialogVisible.value = true;
+  updateCaptchaRegister(); // 在显示注册对话框时获取验证码
 
   // 清除校验信息，确保在对话框渲染完成后执行
   nextTick(() => {
@@ -125,7 +157,7 @@ const toForgetPassword = () => {
   ElMessage.info('正在开发忘记密码');
 }
 
-//以下：点击注册键后的注册表单提交
+//点击注册键后的注册表单提交
 const registerSubmit = async () => {
   if (!registerFormRef.value) return
   const valid = await registerFormRef.value.validate();
