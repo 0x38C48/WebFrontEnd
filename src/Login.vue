@@ -22,6 +22,7 @@
       </el-form>
     </div>
   </div>
+
   <div class="register-dialog" rule="">
     <el-dialog class="register-dialog" title="用户注册" v-model="dialogVisible" v-show="dialogVisible">
       <el-form :model="registerReq" :rules="registerRules" ref="registerFormRef" class="register-form" label-width="120px" style="margin-top: 20px">
@@ -53,6 +54,39 @@
       </el-form>
     </el-dialog>
   </div>
+
+  <!-- 忘记密码对话框 -->
+  <div class="forget-password-dialog" rule="">
+    <el-dialog class="forget-password-dialog" title="忘记密码" v-model="forgetPasswordDialogVisible" v-show="forgetPasswordDialogVisible">
+      <el-form :model="forgetPasswordReq" :rules="forgetPasswordRules" ref="forgetPasswordFormRef" class="forget-password-form" label-width="120px" style="margin-top: 20px">
+        <el-form-item label="用户名" prop="username" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="forgetPasswordReq.username" placeholder="请输入用户名" class="forget-password-input" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="forgetPasswordReq.email" placeholder="请输入邮箱（演示版本不做验证）" class="forget-password-input" />
+        </el-form-item>
+        <el-form-item label="图片验证码" prop="imageCode" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="forgetPasswordReq.imageCode" placeholder="请输入图片验证码" class="forget-password-input" style="width: 150px; margin-right: 10px;" />
+          <el-image :src="forgetPasswordCaptchaImageUrl" @click="updateCaptchaForgetPassword" style="width: 100px; height: 40px; cursor: pointer;" />
+        </el-form-item>
+        <el-form-item label="邮箱验证码" prop="emailCode" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input v-model="forgetPasswordReq.emailCode" placeholder="请输入邮箱验证码（演示码：123456）" class="forget-password-input" />
+          <div style="font-size: 12px; color: #666; margin-top: 5px;">演示验证码：123456</div>
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input type="password" v-model="forgetPasswordReq.newPassword" placeholder="请输入新密码" class="forget-password-input" />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword" style="font-family:Microsoft YaHei, serif; font-weight: bold">
+          <el-input type="password" v-model="forgetPasswordReq.confirmPassword" placeholder="请再次输入新密码" class="forget-password-input" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="forget-password-button" @click="resetPassword()" :loading="isResetting">
+            {{ isResetting ? '重置中...' : '重置密码' }}
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -61,9 +95,11 @@ import { container } from '~/inverfiy.config';
 import { ID_APP_PRESENTER, ID_LOGIN_SERVICE } from '~/types';
 import { AppPresenter } from "~/infrastructure/presenters/app-presenter";
 import {RegisterServiceImpl} from "~/infrastructure/services/register-service-impl";
-import {reactive, ref, nextTick}from 'vue'
+import {ForgetPasswordServiceImpl} from "~/infrastructure/services/forget-password-service-impl";
+import {reactive, ref, nextTick, watch}from 'vue'
 import { LoginRequest } from './infrastructure/models/login';
 import { RegisterRequest } from './infrastructure/models/register';
+import { ForgetPasswordRequest } from './infrastructure/models/forget-password';
 import {ValidateServiceImpl} from "~/infrastructure/services/validate-service-impl";
 import { ValidCodeRequest } from "~/infrastructure/models/valid-code-req";
 //const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456', code: '' });
@@ -73,8 +109,22 @@ const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456',
 const valReq: ValidCodeRequest = reactive({username: '', password: '', perName: '', role: '', email: ''});
 const registerReq: RegisterRequest = reactive({ username: '202400002222', password: '123456', perName: '测试', role: '学生', email: 'test@example.com', code: '' });
 const dialogVisible = ref(false);
+const forgetPasswordDialogVisible = ref(false);
 const captchaImageUrl = ref(''); // 用于存储验证码图片的URL
 const registerFormRef = ref<InstanceType<typeof ElForm>>()
+
+// 忘记密码相关变量
+const forgetPasswordReq: ForgetPasswordRequest = reactive({
+  username: '',
+  email: '',
+  emailCode: '', // 邮箱验证码
+  imageCode: '', // 图片验证码
+  newPassword: '',
+  confirmPassword: ''
+})
+const forgetPasswordFormRef = ref<InstanceType<typeof ElForm>>()
+const isResetting = ref(false)
+const forgetPasswordCaptchaImageUrl = ref(''); // 用于存储忘记密码验证码图片的URL
 
 const registerRules: FormRules<RegisterRequest> = reactive({
   username: [
@@ -102,6 +152,43 @@ const registerRules: FormRules<RegisterRequest> = reactive({
   // ],
 })
 
+// 忘记密码验证规则
+const forgetPasswordRules: FormRules<ForgetPasswordRequest> = reactive({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { len: 12, message: '用户名须为12位学号', trigger: 'blur' },
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' }
+    // 移除邮箱格式验证，演示版本不做验证
+  ],
+  imageCode: [
+    //{ required: true, message: '请输入图片验证码', trigger: 'blur' },暂时不强制要求
+    { len: 6, message: '图片验证码长度为6个字符', trigger: 'blur' },
+  ],
+  emailCode: [
+    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
+    { len: 6, message: '邮箱验证码长度为6个字符', trigger: 'blur' },
+  ],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 18, message: '密码长度在6到18个字符', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== forgetPasswordReq.newPassword) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+})
+
 const appPresenter = container.get<AppPresenter>(ID_APP_PRESENTER);
 const isLoading = ref(false);
 
@@ -119,6 +206,17 @@ const updateCaptchaRegister = () => {
     captchaImageUrl.value = res.data.img;
   });
   //ElMessage.success("成功更新验证码。");
+};
+
+// 获取忘记密码验证码
+const updateCaptchaForgetPassword = () => {
+  const vReq = {...valReq};
+  vReq.username = forgetPasswordReq.username;
+  vReq.email = forgetPasswordReq.email;
+  const validateServiceImpl = new ValidateServiceImpl();
+  validateServiceImpl.getValidateCode(vReq).then(res => {
+    forgetPasswordCaptchaImageUrl.value = res.data.img;
+  });
 };
 
 const loginSubmit = async () => {
@@ -150,11 +248,59 @@ const toRegister = () =>{
     registerFormRef.value?.resetFields();
   });
 
-  ElMessage.info('正在开发注册')
 }
 
 const toForgetPassword = () => {
-  ElMessage.info('正在开发忘记密码');
+  // 设置忘记密码表单的默认值
+  forgetPasswordReq.username = '202400002222';
+  forgetPasswordReq.email = 'test@example.com';
+  forgetPasswordReq.emailCode = '123456';
+  forgetPasswordReq.imageCode = '';
+  forgetPasswordReq.newPassword = '222222';
+  forgetPasswordReq.confirmPassword = '222222';
+  
+  // 清除校验信息
+  nextTick(() => {
+    forgetPasswordFormRef.value?.resetFields()
+  })
+  
+  // 获取验证码
+  updateCaptchaForgetPassword()
+  
+  forgetPasswordDialogVisible.value = true;
+}
+
+
+
+// 重置密码
+const resetPassword = async () => {
+  if (!forgetPasswordFormRef.value) return
+  
+  const valid = await forgetPasswordFormRef.value.validate()
+  if (valid) {
+    // 邮箱验证码验证（演示版本固定为123456）
+    if (forgetPasswordReq.emailCode !== '123456') {
+      ElMessage.error('邮箱验证码错误，请输入123456')
+      return
+    }
+    
+    isResetting.value = true
+    try {
+      const forgetPasswordService = new ForgetPasswordServiceImpl()
+      // 构建重置密码请求
+      const resetRequest = {
+        username: forgetPasswordReq.username,
+        newPassword: forgetPasswordReq.newPassword
+      }
+      await forgetPasswordService.resetPassword(resetRequest)
+      ElMessage.success('密码重置成功，请使用新密码登录')
+      forgetPasswordDialogVisible.value = false
+    } catch (error: any) {
+      ElMessage.error(error.message || '密码重置失败')
+    } finally {
+      isResetting.value = false
+    }
+  }
 }
 
 //点击注册键后的注册表单提交
@@ -167,7 +313,7 @@ const registerSubmit = async () => {
       registerReq1.role = 'STUDENT';
     if(registerReq.role === '教师')
       registerReq1.role = 'TEACHER';
-    ElMessage.info('正在开发注册')
+    //ElMessage.info('正在开发注册')
     // 待填充注册逻辑
     const registerService = new RegisterServiceImpl();
     await registerService.register(registerReq1);
@@ -303,7 +449,7 @@ const registerSubmit = async () => {
 }
 
 .register-dialog :deep(.el-dialog){
-  margin-top: 200px;
+  margin-top: 160px;
   max-width: 90%;
   border-radius: 12px;
   width: 480px;
@@ -327,6 +473,37 @@ const registerSubmit = async () => {
 }
 
 .register-input{
+  width: 250px;
+  border-radius: 50px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  font-family: "Microsoft YaHei",serif;
+}
+
+.forget-password-dialog :deep(.el-dialog){
+  margin-top: 150px;
+  max-width: 90%;
+  border-radius: 12px;
+  width: 480px;
+  min-height: 435px;
+  font-family: 微软雅黑,serif;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.forget-password-button{
+  justify-self: center;
+  margin-top: 20px;
+  width: 60%;
+  height: 40px;
+  border-radius: 8px;
+  background: #771010;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.forget-password-input{
   width: 250px;
   border-radius: 50px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);

@@ -48,6 +48,7 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FamilyMember: typeof import('./components/FamilyMember/index.vue')['default']
+    ForgetPassword: typeof import('./components/ForgetPassword/index.vue')['default']
     MainPage: typeof import('./components/MainPage/index.vue')['default']
     MenuManage: typeof import('./components/MenuManage/index.vue')['default']
     Navi: typeof import('./components/Navi/index.vue')['default']
