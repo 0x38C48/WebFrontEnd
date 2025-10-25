@@ -3,9 +3,12 @@
         <el-container v-if="userInfo.username.length > 0">
             <el-header height="120" class="header-container">
                 <div class="flex justify-between items-center h-full px-4">
-                    <div>
-                        <el-image style="height: 55px; margin-left: 20px; margin-top: 5px; margin-bottom: 5px;" src="/SDU logo(White).png" />
-                        <el-image style="height: 45px; margin-left: 20px; margin-top: 5px; margin-bottom: 8px;" src="/SDUlogo(White).png" />
+                    <div class="flex items-center h-full py-2">
+                        <el-image style="height: 55px; margin-left: 20px;" src="/SDU logo(White).png" />
+                        <el-image style="height: 45px; margin-left: 20px;" src="/SDUlogo(White).png" />
+                      <el-text style="color: white; font-size: 30px; font-family: 'Source Han Sans CN', 'Microsoft YaHei', sans-serif; font-weight: 600; margin-left: 20px;">
+                        学生信息管理平台
+                      </el-text>
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="username-text">{{ userInfo.username }}</span>
@@ -232,12 +235,12 @@ const changeUser = async (type: string) => {
 
 /* 主内容区域 */
 .main-content {
-    margin-left: 140px;
-    margin-right: 140px;
+    /*margin-left: 140px;
+    margin-right: 140px;*/
     /*background-color: #f5f7fa;*/
-    padding: 0;
+    padding: 0 150px;
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
     display: flex;
     flex-direction: column;
 }

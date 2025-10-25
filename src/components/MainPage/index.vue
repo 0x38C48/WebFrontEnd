@@ -281,8 +281,6 @@ const resizeChart = (): void => {
 <style lang="scss" scoped>
 /* 主容器样式 */
 .main-page-container {
-    margin-top: 100px;
-    display: flex;
     padding: 20px;
     min-height: 100vh;
     /*background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);*/

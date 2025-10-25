@@ -1,6 +1,6 @@
 import axios from "axios";
 import { IForgetPasswordService } from "../boundaries/forget-password-service";
-import { SendCodeRequest, ResetPasswordRequest } from "../models/forget-password";
+import { ResetPasswordRequest } from "../models/forget-password";
 
 export class ForgetPasswordServiceImpl implements IForgetPasswordService {
 

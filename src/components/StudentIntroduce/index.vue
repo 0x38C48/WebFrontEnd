@@ -1,5 +1,6 @@
 <template>
-    <el-form ref="form" :model="data.info" label-width="120px" margin-top:100px>
+  <div class="studentInfoContainer">
+    <el-form ref="form" :model="data.info" label-width="120px" >
         <el-row>
             <el-col :span="21">
                 <el-row :gutter="20">
@@ -72,13 +73,9 @@
                 </el-row>
             </el-col>
             <el-col :span="3">
-                <el-row :gutter="16">
-                    <el-col :span="3">
-                        <el-form-item label="">
-                            <img :src="data.imgStr" alt="个人照片" width="160" />
-                        </el-form-item>
-                    </el-col>
-                </el-row>
+                <div class="student-photo-container">
+                    <img :src="data.imgStr" alt="个人照片" class="student-photo" />
+                </div>
             </el-col>
         </el-row>
     </el-form>
@@ -125,6 +122,7 @@
             </template>
         </el-table-column>
     </el-table>
+  </div>
     <div style="width: 100%; margin-top: 20px;">
         <el-row :gutter="20">
             <el-col :span="8">
@@ -298,5 +296,20 @@ const resizeChart = (): void => {
 #myChartLine:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
+}
+.studentInfoContainer{
+  margin-top: 35px;
+}
+.student-photo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.student-photo {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
 }
 </style>
