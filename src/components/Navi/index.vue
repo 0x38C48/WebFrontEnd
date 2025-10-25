@@ -147,8 +147,8 @@ const changeUser = async (type: string) => {
 /* Header 样式 */
 .header-container {
     background: #771010;
-    border-bottom: 3px solid #e0e6ed;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-bottom: 4px solid #771010;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 }
 
@@ -232,8 +232,9 @@ const changeUser = async (type: string) => {
 
 /* 主内容区域 */
 .main-content {
-    background-color: #f5f7fa;
-    border-left: 1px solid #e0e6ed;
+    margin-left: 140px;
+    margin-right: 140px;
+    /*background-color: #f5f7fa;*/
     padding: 0;
     height: 100%;
     overflow: hidden;

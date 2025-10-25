@@ -1,5 +1,5 @@
 <template>
-    <el-form ref="form" :model="data.info" label-width="120px">
+    <el-form ref="form" :model="data.info" label-width="120px" margin-top:100px>
         <el-row>
             <el-col :span="21">
                 <el-row :gutter="20">

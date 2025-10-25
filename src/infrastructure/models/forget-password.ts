@@ -6,11 +6,6 @@ export interface ForgetPasswordRequest {
   newPassword: string;
   confirmPassword: string;
 }
-//
-// export interface SendCodeRequest {
-//   username: string;
-//   email: string;
-// }
 
 export interface ResetPasswordRequest {
   username: string;
