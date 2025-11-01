@@ -10,4 +10,9 @@ export interface ITeachingService {
     getScoreList(personId: number | null, courseId: number | null): Promise<[]>;
     scoreSave(scoreId: number | null, personId: number, courseId: number, mark: number): Promise<DataResponse>;
     scoreDelete(scoreId: number): Promise<DataResponse>;
+    
+    // 选课相关方法（基于后端实际接口）
+    courseChooseSave(personId: number, courseId: number, courseChooseId: number | null): Promise<DataResponse>;
+    courseChooseDelete(courseChooseId: number): Promise<DataResponse>;
+    getCourseChooseList(personId: number | null, courseId: number | null): Promise<DataResponse>;
 }

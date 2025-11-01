@@ -37,3 +37,27 @@ export interface ScoreData {
     studentList: OptionItem[];
     courseList: OptionItem[];
 }
+// 选课结果数据模型
+export interface CourseChooseResult {
+    courseChooseId: number;
+    personId: number;
+    courseId: number;
+    courseNum: string;
+    courseName: string;
+    credit: number;
+    chooseTime: string;
+    status: string; // 选课状态：已选、待确认、已退选等
+    score?: number; // 成绩（如果有）
+    teacherName?: string; // 授课教师
+    semester?: string; // 学期
+}
+
+// 选课结果查询数据
+export interface CourseChooseResultData {
+    personId: number;
+    dataList: CourseChooseResult[];
+    totalCredits: number;
+    currentSemesterCredits: number;
+    totalCourses: number;
+    passedCourses: number;
+}
