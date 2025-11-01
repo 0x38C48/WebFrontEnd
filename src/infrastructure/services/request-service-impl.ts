@@ -162,4 +162,23 @@ export class RequestServiceImpl implements IRequestService {
       alert("导出失败！");
     }
   }
+
+  public async binaryRequest(url: string, data: any | null): Promise<Response> {
+    const requestOptions: RequestInit = {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: "Bearer " + this.storeService.getToken(),
+      },
+      body: data ? JSON.stringify({ data: data }) : undefined,
+    };
+
+    try {
+      const response = await fetch(url, requestOptions);
+      return response;
+    } catch (error) {
+      console.error("Binary request failed:", error);
+      throw error; // Re-throw the error for further handling
+    }
+  }
 }

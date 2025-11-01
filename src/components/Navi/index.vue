@@ -238,7 +238,7 @@ const changeUser = async (type: string) => {
     /*margin-left: 140px;
     margin-right: 140px;*/
     /*background-color: #f5f7fa;*/
-    padding: 0 150px;
+    padding: 40px 150px;
     height: 100%;
     overflow: auto;
     display: flex;

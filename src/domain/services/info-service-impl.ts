@@ -22,14 +22,17 @@ export class InfoServiceImpl implements IInfoService {
         });
         return res as DataResponse;
     }
-    //获取学生照片数据后台数据请求方法
+    //获取学生照片数据后台数据请求方法（改为数据库二进制字节流）
     public async getPhotoImageStr(
         fileName: String
-    ): Promise<DataResponse> {
-        const res = await this.requestService.generalRequest("/api/base/getPhotoImageStr", {
-            fileName: fileName,
+    ): Promise<Response> {
+        // 从文件名中提取personId（假设文件名为 "photo/{personId}.jpg"）
+        const personId = fileName.replace("photo/", "").replace(".jpg", "");
+        console.log("personId:" + personId);
+        const res = await this.requestService.binaryRequest("/api/base/getBlobByteData", {
+            personId: personId,
         });
-        return res as DataResponse;
+        return res;
     }
     //上传学生照片数据后台数据请求方法
     public async uploadPhoto(remoteFile: string, file: any): Promise<any> {
