@@ -74,5 +74,37 @@ export class TeachingServiceImpl implements ITeachingService {
         });
         return res as DataResponse;
     }
-
+    //获取学生已选课程列表后台数据请求方法
+    public async getCourseChooseList(
+        personId: number | null,
+        courseId: number | null
+    ): Promise<DataResponse> {
+        const res = await this.requestService.generalRequest("/api/courseChoose/getCourseChooseList", {
+            personId: personId,
+            courseId: courseId,
+        });
+        return res as DataResponse;
+    }
+    //学生选课后台数据请求方法
+    public async courseChooseSave(
+        personId: number,
+        courseId: number,
+        courseChooseId: number | null
+    ): Promise<DataResponse> {
+        const res = await this.requestService.generalRequest("/api/courseChoose/courseChooseSave", {
+            personId: personId,
+            courseId: courseId,
+            courseChooseId: courseChooseId,
+        });
+        return res as DataResponse;
+    }
+    //学生退课后台数据请求方法
+    public async courseChooseDelete(
+        courseChooseId: number
+    ): Promise<DataResponse> {
+        const res = await this.requestService.generalRequest("/api/courseChoose/courseChooseDelete", {
+            courseChooseId: courseChooseId,
+        });
+        return res as DataResponse;
+    }
 }

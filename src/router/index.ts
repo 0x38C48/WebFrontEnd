@@ -69,6 +69,11 @@ const routes = [
     name: "Score",
     component: () => import("~/components/Score/index.vue"),
   },
+  {
+    path: "/courseChoose",
+    name: "CourseChoose",
+    component: () => import("~/components/CourseChoose/index.vue"),
+  }
 ];
 //路由创建
 const router = createRouter({
