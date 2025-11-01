@@ -1,5 +1,27 @@
 <template>
   <div class="login-container">
+    <!-- 背景轮播 -->
+    <div class="background-slider">
+      <div 
+        v-for="(bg, index) in backgroundImages" 
+        :key="index"
+        :class="['background-slide', { active: currentBgIndex === index }]"
+        :style="{ backgroundImage: `url(${bg.url})` }"
+      >
+        <div class="slide-overlay"></div>
+      </div>
+      
+      <!-- 轮播指示器 -->
+      <div class="slider-indicators">
+        <div 
+          v-for="(bg, index) in backgroundImages" 
+          :key="index"
+          :class="['indicator', { active: currentBgIndex === index }]"
+          @click="switchBackground(index)"
+        ></div>
+      </div>
+    </div>
+    
     <div class="login-wrapper">
       <el-image style="height: 60px; margin-left:107px;" src="/山大logo.png"/>
       <div class="login-hd">学生信息管理系统</div>
@@ -96,12 +118,56 @@ import { ID_APP_PRESENTER, ID_LOGIN_SERVICE } from '~/types';
 import { AppPresenter } from "~/infrastructure/presenters/app-presenter";
 import {RegisterServiceImpl} from "~/infrastructure/services/register-service-impl";
 import {ForgetPasswordServiceImpl} from "~/infrastructure/services/forget-password-service-impl";
-import {reactive, ref, nextTick, watch}from 'vue'
+import {reactive, ref, nextTick, watch, onMounted, onUnmounted}from 'vue'
 import { LoginRequest } from './infrastructure/models/login';
 import { RegisterRequest } from './infrastructure/models/register';
 import { ForgetPasswordRequest } from './infrastructure/models/forget-password';
 import {ValidateServiceImpl} from "~/infrastructure/services/validate-service-impl";
 import { ValidCodeRequest } from "~/infrastructure/models/valid-code-req";
+
+// 背景轮播相关变量
+const currentBgIndex = ref(0);
+const backgroundImages = ref([
+  { url: 'public/bgPhoto/1.jpg', title: '校园风光' },
+  { url: 'public/bgPhoto/2.jpg', title: '教学楼' },
+  { url: 'public/bgPhoto/3.jpg', title: '图书馆' },
+  { url: 'public/bgPhoto/4.jpg', title: '运动场' }
+]);
+let slideInterval: number | null = null;
+
+// 切换背景
+const switchBackground = (index: number) => {
+  currentBgIndex.value = index;
+  resetSlideInterval();
+};
+
+// 自动轮播
+const startSlideInterval = () => {
+  slideInterval = window.setInterval(() => {
+    currentBgIndex.value = (currentBgIndex.value + 1) % backgroundImages.value.length;
+  }, 5000); // 5秒切换一次
+};
+
+// 重置轮播定时器
+const resetSlideInterval = () => {
+  if (slideInterval) {
+    clearInterval(slideInterval);
+  }
+  startSlideInterval();
+};
+
+// 组件挂载时启动轮播
+onMounted(() => {
+  startSlideInterval();
+});
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (slideInterval) {
+    clearInterval(slideInterval);
+  }
+});
+
 //const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456', code: '' });
 const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456', code: '' });
 //const registerReq: RegisterRequest = reactive({ username: '', password: '', perName: '', role: '', code: '' });
@@ -327,31 +393,106 @@ const registerSubmit = async () => {
 </script>
 
 <style scoped>
+/* 背景轮播样式 */
+.background-slider {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.background-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+  transform: scale(1.1);
+  animation: zoomInOut 20s infinite alternate;
+}
+
+.background-slide.active {
+  opacity: 1;
+}
+
+.slide-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(119, 16, 16, 0.3) 0%, rgba(44, 62, 80, 0.4) 100%);
+}
+
+.slider-indicators {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  background: #771010;
+  transform: scale(1.2);
+}
+
+.indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes zoomInOut {
+  0% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.15);
+  }
+}
+
 .login-container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #e6f0fa 0%, #f0f5f7 100%);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 1;
 }
 
 .login-wrapper {
-  margin: auto;
-  background: rgba(255, 255, 255, 0.95);
+  margin-right: 10px;
+  margin-left: 850px;
+  background: rgba(255, 255, 255, 0.85);
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(15px);
   min-width: 400px;
   max-width: 450px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .login-form {

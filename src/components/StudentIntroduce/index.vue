@@ -142,6 +142,9 @@
             </el-col>
         </el-row>
     </div>
+  <div class="toggleButton">
+    <el-button type="primary" @click="toggleEdit">{{ isEditing ? '保存' : '编辑' }}</el-button>
+  </div>
 </template>
 <script lang="ts" setup name="StudentIntroduce">
 import type { StudentIntroduceData } from "~/domain/models/info";
@@ -157,6 +160,12 @@ let timer: string | number | NodeJS.Timeout | undefined;
 let myChartBar: ECharts | null = null;
 let myChartLine: ECharts | null = null;
 let myChartPie: ECharts | null = null;
+let isEditing = ref(false);
+
+const toggleEdit = () => {
+    isEditing.value = !isEditing.value;
+};
+
 const props = defineProps({
     personId: {
         type: Number,
@@ -311,5 +320,10 @@ const resizeChart = (): void => {
     max-width: 100%;
     max-height: 100%;
     border-radius: 8px;
+}
+
+.toggleButton {
+    flex :auto;
+    margin-top: 10px;
 }
 </style>
