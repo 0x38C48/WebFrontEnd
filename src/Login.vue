@@ -484,11 +484,11 @@ const registerSubmit = async () => {
 
 .login-wrapper {
   margin-right: 10px;
-  margin-left: 850px;
+  margin-left: 950px;
   background: rgba(255, 255, 255, 0.85);
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(15px);
   min-width: 400px;
   max-width: 450px;
