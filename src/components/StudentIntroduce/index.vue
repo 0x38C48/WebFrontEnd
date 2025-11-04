@@ -142,9 +142,6 @@
             </el-col>
         </el-row>
     </div>
-  <div class="toggleButton">
-    <el-button type="primary" @click="toggleEdit">{{ isEditing ? '保存' : '编辑' }}</el-button>
-  </div>
 </template>
 <script lang="ts" setup name="StudentIntroduce">
 import type { StudentIntroduceData } from "~/domain/models/info";
@@ -307,7 +304,7 @@ const resizeChart = (): void => {
     transform: translateY(-2px);
 }
 .studentInfoContainer{
-  margin-top: 35px;
+
 }
 .student-photo-container {
     display: flex;

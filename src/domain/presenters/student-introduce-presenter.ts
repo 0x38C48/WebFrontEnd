@@ -18,8 +18,21 @@ export class StudentIntroducePresenter {
             data.feeList = res.data.feeList;
             data.markList = res.data.markList;
             data.scoreList = res.data.scoreList;
-            res = await this.service.getPhotoImageStr("photo/" + data.info.personId + ".jpg");
-            data.imgStr = res.data;
+            //res = await this.service.getPhotoImageStr("photo/" + data.info.personId + ".jpg");
+            let re = await this.service.getPhotoImageStr("photo/" + data.info.personId + ".jpg");
+            console.log("res:" + re.statusText);
+            if (re.ok) {
+                const blobData = await re.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    data.imgStr = reader.result as string;
+                };
+                reader.readAsDataURL(blobData);
+            } else {
+                console.error("Failed to fetch image:", re.status, re.statusText);
+                data.imgStr = ""; // Handle error case
+            }
+
         }
     }
 }

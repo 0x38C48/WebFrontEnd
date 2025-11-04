@@ -14,4 +14,5 @@ export interface IRequestService {
   downloadPost(url: string, label: string, data: any): Promise<any>
   getPdfData(url: string, data: any): Promise<string>
   doExport(url: string, fileName: string, data: any): Promise<any>
+  binaryRequest(url: string, data: any | null): Promise<Response>
 }
