@@ -46,10 +46,7 @@ export interface CourseChooseResult {
     courseName: string;
     credit: number;
     chooseTime: string;
-    status: string; // 选课状态：已选、待确认、已退选等
     score?: number; // 成绩（如果有）
-    teacherName?: string; // 授课教师
-    semester?: string; // 学期
 }
 
 // 选课结果查询数据
@@ -57,7 +54,6 @@ export interface CourseChooseResultData {
     personId: number;
     dataList: CourseChooseResult[];
     totalCredits: number;
-    currentSemesterCredits: number;
     totalCourses: number;
     passedCourses: number;
 }
