@@ -12,12 +12,13 @@ export class RegisterServiceImpl {
         });
       //等待从服务器返还
       if (
-        res.status == 200
+        res.status == 200&&res.data.code==0
       ) {
           ElMessage.success("注册成功!")
-        return res.data;
+        return res.data.msg;
       } else {
-        throw new Error("注册错误");
+          ElMessage.error("注册失败。"+'\n'+res.data.msg);
+        throw new Error("注册错误"+res.data.msg);
       }
     }
     catch (error: any) {

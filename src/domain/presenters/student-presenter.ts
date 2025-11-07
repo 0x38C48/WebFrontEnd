@@ -60,8 +60,18 @@ export class StudentPresenter {
         let item = { ...data.dataList[index] } as StudentItem;
         data.currentIndex = index;
         data.birthday = this.commService.getDateFromStr(item.birthday);
-        const res = await this.infoService.getPhotoImageStr("photo/" + item.personId + ".jpg");
-        data.imgStr = res.data;
+        const re = await this.infoService.getPhotoImageStr("photo/" + item.personId + ".jpg");
+        if (re.ok) {
+            const blobData = await re.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                data.imgStr = reader.result as string;//onloadend：当读取完成时执行的内容
+            };
+            reader.readAsDataURL(blobData);
+        } else {
+            console.error("Failed to fetch image:", re.status, re.statusText);
+            data.imgStr = ""; // Handle error case
+        }
         return item;
     }
     public async itemSubmit(item: StudentItem, data: StudentData): Promise<void> {
@@ -99,8 +109,18 @@ export class StudentPresenter {
     public async onSuccessPhoto(data: StudentData, res: any): Promise<void> {
         if (res.code == 0) {
             this.messageService.success("上传成功！");
-            const res = await this.infoService.getPhotoImageStr("photo/" + data.dataList[data.currentIndex].personId + ".jpg");
-            data.imgStr = res.data;
+            const re = await this.infoService.getPhotoImageStr("photo/" + data.dataList[data.currentIndex].personId + ".jpg");
+            if (re.ok) {
+                const blobData = await re.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    data.imgStr = reader.result as string;//onloadend：当读取完成时执行的内容
+                };
+                reader.readAsDataURL(blobData);
+            } else {
+                console.error("Failed to fetch image:", re.status, re.statusText);
+                data.imgStr = ""; // Handle error case
+            }
         } else {
             this.messageService.error(res.msg);
         }

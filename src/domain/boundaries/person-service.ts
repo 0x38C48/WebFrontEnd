@@ -2,6 +2,7 @@ import { DataResponse } from "~/infrastructure/models/request";
 import { StudentItem, FamilyMemberItem, TeacherItem } from "~/domain/models/person";
 export interface IPersonService {
     getStudentPageData(numName: String | null, currentPage: number): Promise<DataResponse>;
+    getTeacherPageData(numName: String | null, currentPage: number): Promise<DataResponse>;
     studentDelete(personId: number): Promise<DataResponse>;
     getStudentInfo(personId: number): Promise<StudentItem>;
     studentEditSave(personId: number | null, form: StudentItem): Promise<DataResponse>;

@@ -44,15 +44,36 @@ export interface FamilyMemberItem {
 //用于教师数据信息的定义
 export interface TeacherItem {
     personId: number;
-    person: PersonItem;
+    num: string;
+    name: string;
+    dept: string;
     title: string;
     degree: string;
+    card: string;
+    gender: string;
+    genderName: string;
+    birthday: string;
+    email: string;
+    phone: string;
+    address: string;
+    introduce: string;
 }
 
 export interface StudentData {
     authHeader: any;
     numName: string;
     dataList: StudentItem[];
+    pagination: Pagination;
+    currentIndex: number;
+    genderList: OptionItem[];
+    birthday: Date;
+    imgStr: string;
+}
+
+export interface TeacherData {
+    authHeader: any;
+    numName: string;
+    dataList: TeacherItem[];
     pagination: Pagination;
     currentIndex: number;
     genderList: OptionItem[];
