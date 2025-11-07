@@ -25,17 +25,24 @@
     <div>
         <el-row :gutter="20" style="margin-bottom: 10px;">
             <el-col :span="12" style="text-align: left;">
-                <el-button type="danger" plain @click="addItem()">添加</el-button>
+                <el-button type="danger" plain @click="addItem()" v-if="!isStudent">添加</el-button>
             </el-col>
             <el-col :span="12" style="text-align: right;">
-                <el-text style="margin-right: 12px;">学生</el-text>
-                <el-select v-model="data.personId">
-                    <el-option v-for="item in data.studentList" :key="item.id" :value="item.id" :label="item.title" />
-                </el-select>
-                <el-text style="margin-right: 12px;">课程</el-text>
-                <el-select v-model="data.courseId">
-                    <el-option v-for="item in data.courseList" :key="item.id" :value="item.id" :label="item.title" />
-                </el-select>
+                <!-- 学生端隐藏选择框，自动使用当前学生ID -->
+                <template v-if="!isStudent">
+                    <el-text style="margin-right: 12px;">学生</el-text>
+                    <el-select v-model="data.personId">
+                        <el-option v-for="item in data.studentList" :key="item.id" :value="item.id" :label="item.title" />
+                    </el-select>
+                    <el-text style="margin-right: 12px;">课程</el-text>
+                    <el-select v-model="data.courseId">
+                        <el-option v-for="item in data.courseList" :key="item.id" :value="item.id" :label="item.title" />
+                    </el-select>
+                </template>
+                <!-- 学生端显示提示信息 -->
+                <template v-else>
+                    <el-text type="primary" style="margin-right: 12px;">正在查询您的成绩...</el-text>
+                </template>
                 <el-button type="danger" plain @click="doQuery()">查询</el-button>
             </el-col>
         </el-row>
@@ -48,8 +55,8 @@
             </el-table-column>
             <el-table-column label="操作" width="180">
                 <template v-slot="scope">
-                    <el-button type="primary" plain @click="editItem(scope.$index)">编辑</el-button>
-                    <el-button type="danger" plain @click="deleteItem(scope.$index)">删除</el-button>
+                    <el-button type="primary" plain @click="editItem(scope.$index)" v-if="!isStudent">编辑</el-button>
+                    <el-button type="danger" plain @click="deleteItem(scope.$index)" v-if="!isStudent">删除</el-button>
                 </template>
             </el-table-column>
             <el-table-column label="学号" width="140">
@@ -95,15 +102,35 @@ import type { ScoreData, ScoreItem } from "~/domain/models/teaching";
 import { container } from '~/inverfiy.config';
 import { ID_SCORE_PRESENTER } from '~/types';
 import { ScorePresenter } from "~/domain/presenters/score-presenter";
-import { ref } from "vue";
-const presenter = container.get<ScorePresenter>(ID_SCORE_PRESENTER);
-let data = ref<ScoreData>({} as ScoreData);
-let itemData = ref<ScoreItem>({} as ScoreItem);
-let editVisible = ref(false);
-presenter.scoreInit().then((res) => {
-    data.value = res;
-});
-const doQuery = async () => {
+import { ref, computed, onMounted } from "vue";
+  import { useCurrentUser } from '~/composables/useCurrentUser';
+  const presenter = container.get<ScorePresenter>(ID_SCORE_PRESENTER);
+  let data = ref<ScoreData>({} as ScoreData);
+  const { isStudent, currentUserId } = useCurrentUser();
+  let itemData = ref<ScoreItem>({} as ScoreItem);
+  let editVisible = ref(false);
+  
+  // 初始化数据
+  const initData = async () => {
+    try {
+      const res = await presenter.scoreInit();
+      data.value = res;
+      
+      // 学生端自动设置personId并查询成绩
+      if (isStudent.value && currentUserId.value) {
+        data.value.personId = currentUserId.value;
+        await doQuery();
+      }
+    } catch (error) {
+      console.error('初始化成绩数据失败:', error);
+    }
+  };
+  
+  onMounted(async () => {
+    await initData();
+  });
+  
+  const doQuery = async () => {
     await presenter.getScoreList(data.value);
 };
 const addItem = async () => {
