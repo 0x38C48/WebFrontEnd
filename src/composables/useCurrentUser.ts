@@ -10,7 +10,6 @@ export function useCurrentUser() {
 
     // 当前用户ID
     const currentUserId = computed(() => {
-        // 不使用硬编码的默认值，而是返回实际存储的值
         return appStore.userInfo.id || 0;
     });
 
@@ -46,17 +45,17 @@ export function useCurrentUser() {
 
     // 检查用户是否为管理员
     const isAdmin = computed(() => {
-        return hasRole('admin') || hasRole('administrator') || hasRole('ROLE_ADMIN');
-    });
-
-    // 检查用户是否为学生
-    const isStudent = computed(() => {
-        return hasRole('ROLE_STUDENT') || hasRole('student') || hasRole('learner');
+        return hasRole('admin') || hasRole('administrator');
     });
 
     // 检查用户是否为教师
     const isTeacher = computed(() => {
-        return hasRole('ROLE_TEACHER') || hasRole('teacher') || hasRole('instructor');
+        return hasRole('teacher') || hasRole('instructor');
+    });
+
+    // 检查用户是否为学生
+    const isStudent = computed(() => {
+        return hasRole('student') || hasRole('learner');
     });
 
     return {
@@ -71,8 +70,8 @@ export function useCurrentUser() {
         hasRole,
         hasAnyRole,
         isAdmin,
-        isStudent,
         isTeacher,
+        isStudent,
         
         // Store实例（用于直接访问store方法）
         appStore

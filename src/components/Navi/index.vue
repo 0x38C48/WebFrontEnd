@@ -22,7 +22,6 @@
                             <template #dropdown>
                                 <el-dropdown-menu>
                                     <el-dropdown-item @click="changeUser('ROLE_ADMIN')">管理员</el-dropdown-item>
-                                    <el-dropdown-item @click="changeUser('ROLE_TEACHER')">教师</el-dropdown-item>
                                     <el-dropdown-item @click="changeUser('ROLE_STUDENT')">学生</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
@@ -37,8 +36,7 @@
                     <el-scrollbar class="scrollbar">
                         <el-menu background-color="#2c3039" text-color="#ffffff" active-text-color="#409eff" router
                             :default-openeds="['0']" class="sidebar-menu">
-                            <!-- 计算角色特定的菜单列表 -->
-                            <template v-for="(v, i) in getRoleSpecificMenuList" :key="i">
+                            <template v-for="(v, i) in systemConfig.menuList" :key="i">
                                 <template v-if="v.sList.length > 0">
                                     <el-sub-menu :index="i.toString()">
                                         <template v-slot:title>
@@ -77,7 +75,7 @@
 import { container } from '~/inverfiy.config';
 import { ID_APP_PRESENTER } from '~/types';
 import { AppPresenter } from "~/infrastructure/presenters/app-presenter";
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useAppStore } from "~/stores/app";
@@ -114,78 +112,33 @@ const logout = () => {
 
 
 const routerPath = (path: string) => {
-        console.log("routerPath", path);
-        if (path == null || path == undefined || path == "") {
-            return;
-        }
-        router.push({ path: "/" + path });
-    };
-
-    // 根据角色获取特定的菜单列表
-    const getRoleSpecificMenuList = computed(() => {
-        const role = appStore.userInfo.role;
-        const originalMenus = systemConfig.value.menuList;
-        
-        // 对于管理员和教师，返回原始菜单
-        if (role === 'ROLE_ADMIN' || role === 'ROLE_TEACHER') {
-            return originalMenus;
-        }
-        
-        // 对于学生，添加或修改菜单项
-        if (role === 'ROLE_STUDENT') {
-            // 创建菜单副本
-            const studentMenus = JSON.parse(JSON.stringify(originalMenus));
-            
-            // 检查是否已有教务管理菜单
-            let teachingMenuIndex = studentMenus.findIndex((menu: any) => menu.title === '教务管理');
-            
-            if (teachingMenuIndex === -1) {
-                // 如果没有，添加教务管理菜单，只包含选课和成绩查看功能
-                studentMenus.push({
-                    title: '教务管理',
-                    sList: [
-                        { title: '选课管理', path: 'courseChoose' },
-                        { title: '成绩查询', path: 'score' }
-                    ]
-                });
-            } else {
-                // 如果有，修改为只包含选课和成绩查看功能
-                studentMenus[teachingMenuIndex].sList = [
-                    { title: '选课管理', path: 'courseChoose' },
-                    { title: '成绩查询', path: 'score' }
-                ];
-            }
-            
-            return studentMenus;
-        }
-        
-        // 默认返回原始菜单
-        return originalMenus;
-    });
+    console.log("routerPath", path);
+    if (path == null || path == undefined || path == "") {
+        return;
+    }
+    router.push({ path: "/" + path });
+};
 
 const changeUser = async (type: string) => {
-        console.log("type", type);
-        if (type == appStore.userInfo.role) {
-            return;
-        }
-        let loginReq = {
-            username: '',
-            password: '',
-            code: ''
-        };
-        if (type === 'ROLE_ADMIN') {
-            loginReq.username = 'admin';
-            loginReq.password = '123456';
-        } else if (type === 'ROLE_TEACHER') {
-            loginReq.username = 'teacher001';
-            loginReq.password = '123456';
-        } else if (type === 'ROLE_STUDENT') {
-            loginReq.username = '2022030001';
-            loginReq.password = '123456';
-        }
-        console.log("login", loginReq);
-        await appPresenter.enterApp(loginReq);
+    console.log("type", type);
+    if (type == appStore.userInfo.role) {
+        return;
+    }
+    let loginReq = {
+        username: '',
+        password: '',
+        code: ''
     };
+    if (type === 'ROLE_ADMIN') {
+        loginReq.username = 'admin';
+        loginReq.password = '123456';
+    } else if (type === 'ROLE_STUDENT') {
+        loginReq.username = '2022030001';
+        loginReq.password = '123456';
+    }
+    console.log("login", loginReq);
+    await appPresenter.enterApp(loginReq);
+};
 </script>
 
 <style scoped>

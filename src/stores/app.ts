@@ -29,12 +29,11 @@ export const useAppStore = defineStore("app", {
       this.isAuthenticated = isAuthenticated;
       this.userInfo = {
         loggedIn: true,
-        username: res.username || '',
-        perName: res.perName || '',
-        token: res.token || '',
-        // 确保ID有效
-        id: res.id || 0,
-        role: res.role || '',
+        username: res.username,
+        perName: res.perName,
+        token: res.token,
+        id: res.id,
+        role: res.role,
       };
     },
     logout() {

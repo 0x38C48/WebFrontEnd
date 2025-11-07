@@ -2,7 +2,7 @@
     <el-dialog title="课程添加修改对话框" v-model="editVisible" :close-on-click-modal="false">
         <el-form ref="form" :model="itemData" class="edit-form" label-width="120px">
             <el-form-item label="课程号">
-                <el-input v-model="itemData.num" placeholder="请输入课程号" />
+                <el-input v-model="itemData.num" placeholder="请输入学号" />
             </el-form-item>
             <el-form-item label="课程名">
                 <el-input v-model="itemData.name" placeholder="请输入课程名" />
@@ -30,8 +30,7 @@
     <div>
         <el-row :gutter="20" style="margin-bottom: 10px;">
             <el-col :span="12" style="text-align: left;">
-                <el-button v-if="!isStudent" type="danger" plain @click="addItem()">添加</el-button>
-                <el-button type="primary" style="margin-left: 10px;" @click="goToCourseChoose()">选课管理</el-button>
+                <el-button type="danger" plain @click="addItem()">添加</el-button>
             </el-col>
             <el-col :span="12" style="text-align: right;">
                 <el-text style="margin-right: 12px;">课程号或课程名</el-text>
@@ -48,8 +47,8 @@
             </el-table-column>
             <el-table-column label="操作" width="180">
                 <template v-slot="scope">
-                    <el-button v-if="!isStudent" type="primary" plain @click="editItem(scope.$index)">编辑</el-button>
-                    <el-button v-if="!isStudent" type="danger" plain @click="deleteItem(scope.$index)">删除</el-button>
+                    <el-button type="primary" plain @click="editItem(scope.$index)">编辑</el-button>
+                    <el-button type="danger" plain @click="deleteItem(scope.$index)">删除</el-button>
                 </template>
             </el-table-column>
             <el-table-column label="课程号" width="140">
@@ -85,12 +84,8 @@ import type { CourseData, CourseItem } from "~/domain/models/teaching";
 import { container } from '~/inverfiy.config';
 import { ID_COURSE_PRESENTER } from '~/types';
 import { CoursePresenter } from "~/domain/presenters/course-presenter";
-import { ref, computed } from "vue";
-import { useRouter } from 'vue-router';
-import { useCurrentUser } from "~/composables/useCurrentUser";
+import { ref } from "vue";
 const presenter = container.get<CoursePresenter>(ID_COURSE_PRESENTER);
-const router = useRouter();
-const { currentUserRole, isStudent } = useCurrentUser();
 let data = ref<CourseData>({} as CourseData);
 let itemData = ref<CourseItem>({} as CourseItem);
 let editVisible = ref(false);
@@ -114,9 +109,5 @@ const itemSubmit = async () => {
 };
 const deleteItem = async (index: number) => {
     await presenter.deleteItem(data.value, index);
-};
-
-const goToCourseChoose = () => {
-    router.push('/courseChoose');
 };
 </script>
