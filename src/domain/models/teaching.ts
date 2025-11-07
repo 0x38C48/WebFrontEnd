@@ -57,7 +57,7 @@ export interface CourseChooseResultData {
     personId: number;
     dataList: CourseChooseResult[];
     totalCredits: number;
-    currentSemesterCredits: number;
+    //currentSemesterCredits: number;
     totalCourses: number;
     passedCourses: number;
 }
