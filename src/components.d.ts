@@ -61,4 +61,7 @@ declare module 'vue' {
     Teacher: typeof import('./components/Teacher/index.vue')['default']
     TeacherIntroduce: typeof import('./components/TeacherIntroduce/index.vue')['default']
   }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
+  }
 }
