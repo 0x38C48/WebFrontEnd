@@ -22,9 +22,11 @@
                 <el-tab-pane label="可选课程" name="courseList">
                     <!-- 课程查询组件 -->
                     <el-row :gutter="20" style="margin-bottom: 10px; text-align: right;">
-                        <el-text style="margin-right: 12px;">课程号或课程名</el-text>
-                        <el-input v-model="data.numName" style="width:220px;margin-right: 12px;" placeholder="请输入课程号或课程名" />
-                        <el-button type="danger" plain @click="doQueryCourseList()">查询</el-button>
+                        <div style="display: inline-flex; align-items: center;">
+                            <el-text style="margin-right: 12px; white-space: nowrap;">课程号或课程名</el-text>
+                            <el-input v-model="data.numName" style="width:220px;margin-right: 12px;" placeholder="请输入课程号或课程名" />
+                            <el-button type="danger" plain @click="doQueryCourseList()">查询</el-button>
+                        </div>
                     </el-row>
                     
                     <el-table :data="data.dataList" :border="true" :header-cell-style="{ textAlign: 'center' }"
@@ -39,14 +41,14 @@
                                 <el-button type="primary" plain @click="editItem(scope.$index)">选择</el-button>
                             </template>
                         </el-table-column>
-                        <el-table-column label="课程号" width="140">
+                        <el-table-column label="课程号" width="180">
                             <template v-slot="scope">
-                                {{ scope.row.num }}
+                                <div style="text-align: left; padding-left: 10px;">{{ scope.row.num }}</div>
                             </template>
                         </el-table-column>
-                        <el-table-column label="课程名" width="200" show-overflow-tooltip>
+                        <el-table-column label="课程名" width="250" show-overflow-tooltip>
                             <template v-slot="scope">
-                                {{ scope.row.name }}
+                                <div style="text-align: left; padding-left: 10px;">{{ scope.row.name }}</div>
                             </template>
                         </el-table-column>
                         <el-table-column label="学分" width="100">
@@ -66,7 +68,7 @@
                 </el-tab-pane>
                 
                 <!-- 选课结果标签页 -->
-                <el-tab-pane label="我的选课结果" name="courseResult">
+                <el-tab-pane :label="isAdmin ? '选课结果' : '我的选课结果'" name="courseResult">
                     <!-- 统计信息卡片 -->
                     <el-row :gutter="20" style="margin-bottom: 20px;">
                         <el-col :span="6">
@@ -81,7 +83,8 @@
                                 </div>
                             </el-card>
                         </el-col>
-                        <el-col :span="6">
+                        <!-- 只在非管理员模式下显示总学分 -->
+                        <el-col :span="6" v-if="!isAdmin">
                             <el-card shadow="hover">
                                 <template #header>
                                     <div class="card-header">
@@ -170,8 +173,10 @@
                         
                         <el-table-column label="成绩" width="100">
                             <template v-slot="scope">
-                                <!-- 修复成绩显示，确保正确处理各种情况 -->
-                                {{ scope.row.mark !== undefined && scope.row.mark !== null && scope.row.mark !== '' ? scope.row.mark : '未出成绩' }}
+                                <!-- 尝试不同可能的成绩字段名称 -->
+                                <span :class="getScoreClass(scope.row)">
+                                    {{ getScoreValue(scope.row) || '未出成绩' }}
+                                </span>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -184,6 +189,29 @@
             </el-tabs>
         </div>
     </div>
+
+        <!-- 学生选择对话框组件 -->
+        <el-dialog
+            v-model="showStudentDialog"
+            :title="dialogTitle"
+            width="500px"
+            :close-on-click-modal="false"
+            @close="handleStudentCancel"
+        >
+            <el-radio-group v-model="selectedStudentId" style="max-height: 300px; overflow-y: auto; display: block;">
+                <div 
+                    v-for="student in studentOptions" 
+                    :key="student.id"
+                    style="margin: 10px 0; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px;"
+                >
+                    <el-radio :label="student.id">{{ student.title || '未知学生' }} (学号: {{ student.value || '无' }})</el-radio>
+                </div>
+            </el-radio-group>
+            <template #footer>
+                <el-button @click="handleStudentCancel">取消</el-button>
+                <el-button type="primary" @click="handleStudentConfirm">确认</el-button>
+            </template>
+        </el-dialog>
 </template>
 <script lang="ts" setup name="CourseChoose">
 import type { CourseData, CourseItem } from "~/domain/models/teaching";
@@ -194,15 +222,18 @@ import { CoursePresenter } from "~/domain/presenters/course-presenter";
 import { ref, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useCurrentUser } from '~/composables';
+import { ID_SCORE_PRESENTER } from '~/types';
+import { ScorePresenter } from "~/domain/presenters/score-presenter";
 
 const presenter = container.get<CoursePresenter>(ID_COURSE_PRESENTER);
+const scorePresenter = container.get<ScorePresenter>(ID_SCORE_PRESENTER);
 const { currentUserId, currentUserName, isLoggedIn, isAdmin } = useCurrentUser();
 
 // 可选课程相关数据
-let data = ref<CourseData>({} as CourseData);
+const data = ref<CourseData>({} as CourseData);
 
 // 选课结果相关数据
-let resultData = ref<CourseChooseResultData>({
+const resultData = ref<CourseChooseResultData>({
     personId: 0,
     dataList: [],
     totalCredits: 0,
@@ -210,16 +241,34 @@ let resultData = ref<CourseChooseResultData>({
     passedCourses: 0
 });
 
-let loading = ref(false);
-let activeTab = ref('courseList');
+const loading = ref(false);
+const activeTab = ref('courseList');
 
 // 过滤后的选课结果数据列表
 const filteredDataList = computed(() => {
     return resultData.value.dataList;
 });
 
+// 获取成绩显示值
+const getScoreValue = (row: any) => {
+    // 直接使用mark字段，因为我们已经从成绩接口获取并设置了这个字段
+    return row.mark !== undefined && row.mark !== null && row.mark !== '' ? row.mark : null;
+};
+
+// 获取成绩显示样式类
+const getScoreClass = (row: any) => {
+    const score = getScoreValue(row);
+    
+    // 检查成绩是否有效且通过（>=60）
+    if (score !== null && score >= 60) {
+        return 'text-success';
+    }
+    
+    return score !== null ? 'text-danger' : '';
+};
+
 // 计算总学分
-const calculateCredits = (courses: Array<{credit?: any, mark?: number | null}>) => {
+const calculateCredits = (courses: any[]) => {
     // 计算总学分（所有课程）- 确保正确转换为数字类型，避免字符串拼接
     const totalCredits = courses
         .reduce((sum, course) => sum + Number(course.credit || 0), 0);
@@ -270,15 +319,12 @@ const doQueryCourseList = async () => {
 
 // 查询选课结果
 const doQueryCourseResult = async () => {
-    loading.value = true;
     try {
-        // 加载选课结果（模拟数据）
+        // 加载选课结果
         await loadCourseResults();
     } catch (error) {
         ElMessage.error('查询失败');
         console.error('查询失败:', error);
-    } finally {
-        loading.value = false;
     }
 };
 
@@ -310,25 +356,108 @@ const loadCourseResults = async () => {
         const courseResultData = await presenter.getCourseChooseResults(currentUserId.value);
         
         // 打印调试信息
-        console.log(`成功获取到 ${courseResultData.dataList.length} 条选课记录`);
-        
-        // 重新计算统计信息，因为后端返回的格式中可能不包含这些计算字段
-        const creditStats = calculateCredits(courseResultData.dataList);
-        resultData.value = {
-            personId: currentUserId.value,
-            dataList: courseResultData.dataList,
-            ...creditStats
-        };
-        
-        // 打印最终设置给resultData的值
-        console.log('最终设置的resultData:', JSON.stringify(resultData.value, null, 2));
-        
-        // 提示用户数据加载结果
-        if (resultData.value.dataList.length > 0) {
-            ElMessage.success(`成功加载 ${resultData.value.dataList.length} 条选课记录`);
+        // 确保courseResultData和dataList存在
+        if (courseResultData && courseResultData.dataList) {
+            console.log(`成功获取到 ${courseResultData.dataList.length} 条选课记录`);
+            
+            // 调用getScoreList获取成绩数据
+            try {
+                    // 根据用户类型决定如何获取成绩
+                    let coursesWithScores = [];
+                    
+                    if (isAdmin.value) {
+                        console.log('管理员模式：为每个学生分别获取成绩');
+                        // 管理员模式：为每个选课记录获取对应的学生成绩
+                        coursesWithScores = await Promise.all(courseResultData.dataList.map(async (course: any) => {
+                            // 使用选课记录中的学生ID获取成绩
+                            const studentPersonId = course.personId || course.studentId;
+                            if (studentPersonId) {
+                                const scoreData: any = { 
+                                    personId: studentPersonId, 
+                                    courseId: course.courseId, 
+                                    dataList: [], 
+                                    studentList: [], 
+                                    courseList: [] 
+                                };
+                                
+                                try {
+                                    await scorePresenter.getScoreList(scoreData);
+                                    // 查找对应课程的成绩
+                                    const scoreRecord = scoreData.dataList?.find((s: any) => s.courseId === course.courseId);
+                                    return {
+                                        ...course,
+                                        mark: scoreRecord?.mark || null
+                                    };
+                                } catch (err) {
+                                    console.error(`获取学生 ${studentPersonId} 课程 ${course.courseId} 成绩失败:`, err);
+                                    return {
+                                        ...course,
+                                        mark: null
+                                    };
+                                }
+                            }
+                            return {
+                                ...course,
+                                mark: null
+                            };
+                        }));
+                    } else {
+                        // 学生模式：使用当前用户ID获取成绩
+                        console.log(`学生模式：获取用户ID ${currentUserId.value} 的所有成绩`);
+                        const scoreData: any = { personId: currentUserId.value, courseId: null, dataList: [], studentList: [], courseList: [] };
+                        await scorePresenter.getScoreList(scoreData);
+                        console.log(`成功获取到 ${scoreData.dataList?.length || 0} 条成绩记录`);
+                        
+                        // 创建成绩映射表，便于快速查找
+                        const scoreMap = new Map();
+                        if (scoreData.dataList && Array.isArray(scoreData.dataList)) {
+                            scoreData.dataList.forEach((score: any) => {
+                                // 确保score对象有效且包含必要字段
+                                if (score && score.courseId !== undefined && score.mark !== undefined) {
+                                    scoreMap.set(score.courseId, score.mark);
+                                }
+                            });
+                        }
+                        
+                        // 将成绩合并到选课结果中
+                        coursesWithScores = courseResultData.dataList.map((course: any) => ({
+                            ...course,
+                            mark: scoreMap.get(course.courseId) || null
+                        }));
+                    }
+                    
+                    // 重新计算统计信息
+                    const creditStats = calculateCredits(coursesWithScores);
+                    resultData.value = {
+                        personId: currentUserId.value,
+                        dataList: coursesWithScores,
+                        ...creditStats
+                    };
+                    
+                    
+            } catch (scoreError) {
+                console.error('获取成绩数据失败:', scoreError);
+                // 如果获取成绩失败，仍然显示选课结果但不添加成绩
+                const creditStats = calculateCredits(courseResultData.dataList);
+                resultData.value = {
+                    personId: currentUserId.value,
+                    dataList: courseResultData.dataList,
+                    ...creditStats
+                };
+                ElMessage.warning('成功加载选课记录，但获取成绩数据失败');
+            }
         } else {
-            ElMessage.info('暂无选课记录');
+            console.error('获取到的选课结果数据格式不正确');
+            ElMessage.error('获取选课结果失败');
+            resultData.value = {
+                personId: currentUserId.value || 0,
+                dataList: [],
+                totalCredits: 0,
+                totalCourses: 0,
+                passedCourses: 0
+            };
         }
+        
     } catch (error) {
         console.error('获取选课结果失败:', error);
         ElMessage.error(`获取选课结果失败: ${error instanceof Error ? error.message : String(error)}`);
@@ -345,6 +474,14 @@ const loadCourseResults = async () => {
     }
 };
 
+// 存储待选课程和选中的学生ID
+const pendingCourse = ref<any | null>(null);
+const selectedStudentId = ref<number | undefined>(undefined);
+// 学生选项列表和对话框显示状态
+const studentOptions = ref<any[]>([]);
+const showStudentDialog = ref(false);
+const dialogTitle = ref('');
+
 // 选择课程
 const editItem = async (index: number) => {
     try {
@@ -355,61 +492,130 @@ const editItem = async (index: number) => {
             return;
         }
         
-        // 调用presenter的选课方法
-        const success = await presenter.chooseCourse(data.value, index, currentUserId.value);
-        if (success) {
-            // 重新加载选课结果
-            await doQueryCourseResult();
+        // 管理员模式下的特殊逻辑
+        if (isAdmin.value) {
+            // 点击课程，选择学生
+            pendingCourse.value = course;
+            try {
+                // 获取学生选项列表并显示对话框
+                studentOptions.value = await presenter.getStudentItemOptionList();
+                if (!studentOptions.value || studentOptions.value.length === 0) {
+                    ElMessage.warning('暂无学生数据');
+                    pendingCourse.value = null;
+                    return;
+                }
+                
+                // 设置对话框标题并显示对话框
+                dialogTitle.value = `请选择要为其选课的学生 (课程: ${course.name})`;
+                showStudentDialog.value = true;
+            } catch (err) {
+                console.error('获取学生列表失败:', err);
+                ElMessage.error('获取学生列表失败');
+                pendingCourse.value = null;
+            }
+        } else {
+            // 普通用户模式，直接选课
+            const success = await presenter.chooseCourse(data.value, index, currentUserId.value);
+            if (success) {
+                // 重新加载选课结果
+                await doQueryCourseResult();
+            }
         }
     } catch (error) {
-        ElMessage.error('选课失败：' + (error instanceof Error ? error.message : String(error)));
-        console.error('选课失败:', error);
+        // 忽略取消操作的错误
+        if (error !== 'cancel' && !(error instanceof Error && error.message === 'cancel')) {
+            ElMessage.error('选课失败：' + (error instanceof Error ? error.message : String(error)));
+            console.error('选课失败:', error);
+            // 重置状态
+            pendingCourse.value = null;
+            selectedStudentId.value = undefined;
+        }
     }
 };
 
-// 从选课结果退选课程
-const dropCourseFromResult = async (courseChooseId: number) => {
-    if (!courseChooseId) {
-        console.warn('缺少课程选择ID，无法执行退选操作');
-        return;
-    }
-    
-    // 查找对应的课程信息
-    const course = resultData.value.dataList.find(c => c.courseChooseId === courseChooseId || c.courseId === courseChooseId);
-    
-    try {
-        await ElMessageBox.confirm(
-            `确定要退选课程「${course?.courseName || '未命名课程'}」吗？`,
-            '退选确认',
-            {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }
-        );
-        
-        // 调用presenter的退选方法
-        const res = await presenter.dropCourseFromResult(courseChooseId);
-        
-        // 移除对应课程并重新计算学分统计
-        resultData.value.dataList = resultData.value.dataList.filter(c => c.courseChooseId !== courseChooseId && c.courseId !== courseChooseId);
-        
-        // 重新计算学分统计
-        const creditStats = calculateCredits(resultData.value.dataList);
-        resultData.value = {
-            ...resultData.value,
-            ...creditStats
-        };
-        
-        // 刷新可选课程列表
-        await doQueryCourseList();
-        
-    } catch (error) {
-        // 忽略取消操作的错误
-        if (error !== 'cancel') {
-            console.error('退选操作失败:', error);
+    // 处理学生选择对话框确认
+    const handleStudentConfirm = async () => {
+        if (!selectedStudentId.value || !pendingCourse.value) {
+            ElMessage.warning('请先选择学生');
+            return;
         }
+        
+        try {
+            // 找到课程在数据列表中的索引
+            const courseIndex = data.value.dataList.findIndex(c => c.courseId === pendingCourse.value.courseId);
+            if (courseIndex === -1) {
+                ElMessage.error('课程不存在于可选列表中');
+                return;
+            }
+            
+            // 调用presenter的选课方法，使用选中的学生ID
+            const success = await presenter.chooseCourse(data.value, courseIndex, selectedStudentId.value);
+            if (success) {
+                // 重新加载选课结果
+                await doQueryCourseResult();
+                ElMessage.success(`已为学生选课成功`);
+            }
+        } catch (error) {
+            console.error('选课失败:', error);
+            ElMessage.error('选课失败：' + (error instanceof Error ? error.message : String(error)));
+        } finally {
+            // 重置状态并关闭对话框
+            pendingCourse.value = null;
+            selectedStudentId.value = undefined;
+            showStudentDialog.value = false;
+        }
+    };
+
+    // 处理学生选择对话框取消
+    const handleStudentCancel = () => {
+        pendingCourse.value = null;
+        selectedStudentId.value = undefined;
+        showStudentDialog.value = false;
     }
+
+    // 从选课结果退选课程
+    const dropCourseFromResult = async (courseChooseId: number) => {
+        if (!courseChooseId || courseChooseId <= 0) {
+            console.warn('缺少有效的课程选择ID，无法执行退选操作');
+            return;
+        }
+        
+        // 查找对应的课程信息
+        const course = resultData.value.dataList.find(c => c.courseChooseId === courseChooseId || c.courseId === courseChooseId);
+        
+        try {
+            await ElMessageBox.confirm(
+                `确定要退选课程「${course?.courseName || '未命名课程'}」吗？`,
+                '退选确认',
+                {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }
+            );
+            
+            // 调用presenter的退选方法
+            const res = await presenter.dropCourseFromResult(courseChooseId);
+            
+            // 移除对应课程并重新计算学分统计
+            resultData.value.dataList = resultData.value.dataList.filter(c => c.courseChooseId !== courseChooseId && c.courseId !== courseChooseId);
+            
+            // 重新计算学分统计
+            const creditStats = calculateCredits(resultData.value.dataList);
+            resultData.value = {
+                ...resultData.value,
+                ...creditStats
+            };
+            
+            // 刷新可选课程列表
+            await doQueryCourseList();
+            
+        } catch (error) {
+            // 忽略取消操作的错误
+            if (error !== 'cancel') {
+                console.error('退选操作失败:', error);
+            }
+        }
 };
 
 </script>

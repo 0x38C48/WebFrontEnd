@@ -2,13 +2,14 @@
     <el-dialog :title="itemData.scoreId ? '编辑成绩' : '添加成绩'" v-model="editVisible" :close-on-click-modal="false">
         <el-form ref="formRef" :model="itemData" class="edit-form" label-width="120px" :rules="rules">
             <el-form-item label="学生" prop="personId">
-                <el-select v-model="itemData.personId" placeholder="请选择学生" style="width: 100%;">
+                <el-select v-model="itemData.personId" placeholder="请选择学生" style="width: 100%;" @change="handleStudentChange">
                     <el-option v-for="item in data.studentList" :key="item.id" :value="item.id" :label="item.title" />
                 </el-select>
             </el-form-item>
             <el-form-item label="课程" prop="courseId">
                 <el-select v-model="itemData.courseId" placeholder="请选择课程" style="width: 100%;">
-                    <el-option v-for="item in data.courseList" :key="item.id" :value="item.id" :label="item.title" />
+                    <el-option v-for="item in availableCourses" :key="item.id" :value="item.id" :label="item.title" />
+                    <el-option v-if="availableCourses.length === 0" value="" label="请先选择学生" disabled />
                 </el-select>
             </el-form-item>
             <el-form-item label="成绩" prop="mark">
@@ -109,18 +110,27 @@
 <script lang="ts" setup name="Score">
 import type { ScoreData, ScoreItem } from "~/domain/models/teaching";
 import { container } from '~/inverfiy.config';
-import { ID_SCORE_PRESENTER } from '~/types';
+import { ID_SCORE_PRESENTER, ID_REQUEST_SERVICE, ID_COURSE_PRESENTER } from '~/types';
+import type { IRequestService } from '~/infrastructure/boundaries/request-service';
 import { ScorePresenter } from "~/domain/presenters/score-presenter";
 import { ref, reactive, computed, onMounted } from "vue";
 import { useCurrentUser } from '~/composables/useCurrentUser';
 import { ElMessage } from "element-plus";
+import type { CoursePresenter } from '~/domain/presenters/course-presenter';
 
 const presenter = container.get<ScorePresenter>(ID_SCORE_PRESENTER);
+const coursePresenter = container.get<CoursePresenter>(ID_COURSE_PRESENTER);
 let data = ref<ScoreData>({} as ScoreData);
 const { isStudent, isTeacher, isLoggedIn, currentUserId, currentUserName, isAdmin } = useCurrentUser();
 let itemData = reactive<ScoreItem>({} as ScoreItem);
 let editVisible = ref(false);
 let loading = ref(false);
+// 为availableCourses添加明确的类型定义
+interface CourseOption {
+  id: number;
+  title: string;
+}
+let availableCourses = ref<CourseOption[]>([]);
 // 移除显式声明的form变量，让Vue自动处理表单引用
 
 // 表单验证规则
@@ -241,6 +251,8 @@ const addItem = () => {
     courseId: 0,
     mark: undefined
   });
+  // 重置可用课程列表
+  availableCourses.value = [];
   // 重置表单验证状态
   if (formRef.value) {
     formRef.value.resetFields();
@@ -248,11 +260,80 @@ const addItem = () => {
   editVisible.value = true;
 };
 
+// 处理学生选择变化
+const handleStudentChange = async () => {
+  // 重置课程选择
+  itemData.courseId = 0;
+  
+  // 如果选择了学生，加载该学生的选课列表
+  if (itemData.personId) {
+    // 先清空可用课程列表，避免显示旧数据
+    availableCourses.value = [];
+    
+    try {
+      console.log('开始获取学生选课列表，personId:', itemData.personId);
+      
+      // 创建一个临时的请求服务来获取数据，避免访问私有属性
+      // 直接使用coursePresenter的getCourseChooseResults方法，这更符合我们的分层架构设计
+      const courseResultData = await coursePresenter.getCourseChooseResults(itemData.personId);
+      
+      console.log('获取选课列表结果:', courseResultData);
+      
+      // 处理响应数据，考虑不同的响应格式
+      let courseChooseList = [];
+      
+      // 检查响应是否有效
+      if (courseResultData && courseResultData.dataList) {
+        // 获取选课列表数据
+        courseChooseList = courseResultData.dataList;
+        
+        console.log('解析后的选课列表:', courseChooseList);
+        
+        // 转换为下拉框需要的格式
+        availableCourses.value = courseChooseList
+          .filter((course: any) => course && course.courseId && (course.courseNum || course.courseName))
+          .map((course: any) => ({
+            id: Number(course.courseId),
+            title: `${course.courseNum || '未知编号'} - ${course.courseName || '未知课程'}`
+          }));
+        
+        console.log('转换后的可用课程列表:', availableCourses.value);
+        
+        // 如果没有选课记录，显示提示信息
+        if (availableCourses.value.length === 0) {
+          ElMessage.warning('该学生尚未选修任何课程');
+        }
+      } else {
+        // 响应无效时的处理
+        console.error('选课列表响应无效:', courseResultData);
+        ElMessage.warning('获取选课列表失败: 无效的响应数据');
+        // 不显示所有课程，而是保持空列表
+      }
+    } catch (error) {
+      console.error('获取学生选课列表失败:', error);
+      ElMessage.error('获取学生选课列表失败');
+      // 错误时保持空列表，不显示所有课程
+      availableCourses.value = [];
+    }
+  } else {
+    // 未选择学生时清空课程列表
+    availableCourses.value = [];
+  }
+};
+
 // 编辑成绩
 const editItem = async (index: number) => {
   try {
-    itemData = reactive({ ...data.value.dataList[index] });
-    editVisible.value = true;
+      itemData = reactive({ ...data.value.dataList[index] });
+      // 编辑模式下显示所有课程，因为成绩已存在
+      // 转换courseList为正确的CourseOption类型
+      availableCourses.value = data.value.courseList
+        .filter((course: any) => course.id && course.title)
+        .map((course: any) => ({
+          id: Number(course.id),
+          title: course.title
+        }));
+      editVisible.value = true;
   } catch (error) {
     console.error('编辑成绩失败:', error);
     ElMessage.error('加载编辑数据失败');
