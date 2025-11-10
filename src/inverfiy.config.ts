@@ -8,7 +8,7 @@ import {
     ID_DICTIONARY_MANAGE_PRESENTER, ID_MENU_MANAGE_PRESENTER,
     ID_PASSWORD_PRESENTER, ID_SYSTEM_INTRODUCE_PRESENTER, ID_STUDENT_INTRODUCE_PRESENTER,
     ID_STUDENT_PRESENTER, ID_FAMILY_MEMBER_PRESENTER,
-    ID_COURSE_PRESENTER, ID_SCORE_PRESENTER, ID_TEACHER_PRESENTER,
+    ID_COURSE_PRESENTER, ID_SCORE_PRESENTER, ID_TEACHER_PRESENTER, ID_TEACHER_INTRODUCE_PRESENTER,
 } from './types';
 import { ILoginService } from '~/infrastructure/boundaries/login-service';
 import { LoginServiceImpl } from '~/infrastructure/services/login-service-impl';
@@ -49,7 +49,7 @@ import { FamilyMemberPresenter } from '~/domain/presenters/family-member-present
 import { CoursePresenter } from '~/domain/presenters/course-presenter';
 import { ScorePresenter } from '~/domain/presenters/score-presenter';
 import {TeacherPresenter} from "~/domain/presenters/teacher-presenter";
-
+import { TeacherIntroducePresenter } from "~/domain/presenters/teacher-introduce-presenter";
 
 const container = new Container();
 container.bind<ILoginService>(ID_LOGIN_SERVICE).to(LoginServiceImpl).inSingletonScope();
@@ -78,6 +78,7 @@ container.bind<SystemIntroducePresenter>(ID_SYSTEM_INTRODUCE_PRESENTER).to(Syste
 container.bind<StudentPresenter>(ID_STUDENT_PRESENTER).to(StudentPresenter).inSingletonScope();
 container.bind<TeacherPresenter>(ID_TEACHER_PRESENTER).to(TeacherPresenter).inSingletonScope();
 container.bind<FamilyMemberPresenter>(ID_FAMILY_MEMBER_PRESENTER).to(FamilyMemberPresenter).inSingletonScope();
+container.bind<TeacherIntroducePresenter>(ID_TEACHER_INTRODUCE_PRESENTER).to(TeacherIntroducePresenter).inSingletonScope();
 
 container.bind<CoursePresenter>(ID_COURSE_PRESENTER).to(CoursePresenter).inSingletonScope();
 container.bind<ScorePresenter>(ID_SCORE_PRESENTER).to(ScorePresenter).inSingletonScope();

@@ -43,6 +43,11 @@
                 <el-input v-model="itemData.title" placeholder="请输入职称" />
               </el-form-item>
             </el-col>
+            <el-col :span="12">
+              <el-form-item label="学位">
+                <el-input v-model="itemData.degree" placeholder="请输入学位" />
+              </el-form-item>
+            </el-col>
           </el-row>
           <el-row :gutter="16">
             <el-col :span="12">
@@ -55,7 +60,14 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="出生日期">
-                <el-date-picker v-model="data.birthday" type="date" style="width: 100%;" placeholder="选择出生日期" />
+                <el-date-picker v-model="data.birthday" type="date" style="width: 100%;" placeholder="选择出生日期"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :span="24">
+              <el-form-item label="证件号">
+                <el-input v-model="itemData.card" placeholder="请输入证件号" />
               </el-form-item>
             </el-col>
           </el-row>

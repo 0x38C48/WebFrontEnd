@@ -157,11 +157,7 @@ let timer: string | number | NodeJS.Timeout | undefined;
 let myChartBar: ECharts | null = null;
 let myChartLine: ECharts | null = null;
 let myChartPie: ECharts | null = null;
-let isEditing = ref(false);
 
-const toggleEdit = () => {
-    isEditing.value = !isEditing.value;
-};
 
 const props = defineProps({
     personId: {
@@ -319,8 +315,4 @@ const resizeChart = (): void => {
     border-radius: 8px;
 }
 
-.toggleButton {
-    flex :auto;
-    margin-top: 10px;
-}
 </style>

@@ -177,7 +177,7 @@ const changeUser = async (type: string) => {
             loginReq.username = 'admin';
             loginReq.password = '123456';
         } else if (type === 'ROLE_TEACHER') {
-            loginReq.username = 'teacher001';
+            loginReq.username = '202500009999';
             loginReq.password = '123456';
         } else if (type === 'ROLE_STUDENT') {
             loginReq.username = '2022030001';

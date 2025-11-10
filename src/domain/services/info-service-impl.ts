@@ -22,6 +22,15 @@ export class InfoServiceImpl implements IInfoService {
         });
         return res as DataResponse;
     }
+
+    public async getTeacherIntroduceData(
+        personId: number | null
+    ): Promise<DataResponse> {
+        const res = await this.requestService.generalRequest("/api/teacher/getTeacherIntroduceData", {
+            personId: personId,
+        });
+        return res as DataResponse;
+    }
     //获取学生照片数据后台数据请求方法（改为数据库二进制字节流）
     public async getPhotoImageStr(
         fileName: String
