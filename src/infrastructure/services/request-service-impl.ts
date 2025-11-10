@@ -42,14 +42,14 @@ export class RequestServiceImpl implements IRequestService {
         }
       );
       if (res.status != 200) {
-        console.log("Error: " + res.status);
-        return;
+        console.error("Error: " + res.status);
+        throw new Error(`请求失败: ${res.status}`);
       }
       return res.data;
     } catch (error) {
-      console.log("Error: " + error);
-      //    useAppStore().logout();
-      //    router.push("/login");
+      console.error("Error: " + error);
+      // 重新抛出错误，让上层调用者能够捕获
+      throw error;
     }
   }
   public async jwtRequest(

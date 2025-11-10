@@ -153,6 +153,13 @@
                             </template>
                         </el-table-column>
                         
+                        <!-- 仅管理员显示学生姓名 -->
+                        <el-table-column label="学生姓名" width="120" v-if="isAdmin">
+                            <template v-slot="scope">
+                                {{ scope.row.studentName || '未知学生' }}
+                            </template>
+                        </el-table-column>
+                        
                         <el-table-column label="学分" width="100">
                             <template v-slot="scope">
                                 {{ scope.row.credit }}
@@ -163,7 +170,8 @@
                         
                         <el-table-column label="成绩" width="100">
                             <template v-slot="scope">
-                                {{ scope.row.mark !== undefined && scope.row.mark !== null ? scope.row.mark : '未出成绩' }}
+                                <!-- 修复成绩显示，确保正确处理各种情况 -->
+                                {{ scope.row.mark !== undefined && scope.row.mark !== null && scope.row.mark !== '' ? scope.row.mark : '未出成绩' }}
                             </template>
                         </el-table-column>
                     </el-table>
@@ -188,7 +196,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { useCurrentUser } from '~/composables';
 
 const presenter = container.get<CoursePresenter>(ID_COURSE_PRESENTER);
-const { currentUserId, currentUserName, isLoggedIn } = useCurrentUser();
+const { currentUserId, currentUserName, isLoggedIn, isAdmin } = useCurrentUser();
 
 // 可选课程相关数据
 let data = ref<CourseData>({} as CourseData);

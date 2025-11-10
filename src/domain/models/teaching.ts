@@ -20,7 +20,7 @@ export interface CourseData {
 }
 export interface ScoreItem {
     scoreId: number;
-    personId: number;
+    personId: number | null;
     courseId: number;
     studentNum: string;
     studentName: string;
@@ -31,7 +31,7 @@ export interface ScoreItem {
     ranking: number;
 }
 export interface ScoreData {
-    personId: number;
+    personId: number | null;
     courseId: number;
     dataList: ScoreItem[];
     studentList: OptionItem[];

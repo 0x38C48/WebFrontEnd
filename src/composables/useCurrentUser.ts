@@ -46,7 +46,11 @@ export function useCurrentUser() {
 
     // 检查用户是否为管理员
     const isAdmin = computed(() => {
-        return hasRole('admin') || hasRole('administrator') || hasRole('ROLE_ADMIN');
+        // personId为1的用户始终是管理员，无论角色如何
+        return currentUserId.value === 1 || 
+               hasRole('admin') || 
+               hasRole('administrator') || 
+               hasRole('ROLE_ADMIN');
     });
 
     // 检查用户是否为学生
