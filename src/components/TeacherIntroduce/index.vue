@@ -65,9 +65,11 @@
                 <el-input v-model="data.info.address" readonly />
               </el-form-item>
             </el-col>
-            <el-col :span="7">
-              <el-form-item label="个人介绍">
-                <el-input v-model="data.info.introduce" type="textarea" :rows="3" readonly />
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="24">
+              <el-form-item label="简介">
+                <el-input v-model="data.info.introduce" type="textarea" :rows="3" placeholder="个人介绍" readonly/>
               </el-form-item>
             </el-col>
           </el-row>

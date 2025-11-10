@@ -35,7 +35,7 @@
             <el-container class="body-container">
                 <el-aside width="230px" class="sidebar-container">
                     <el-scrollbar class="scrollbar">
-                        <el-menu background-color="#2c3039" text-color="#ffffff" active-text-color="#409eff" router
+                        <el-menu background-color="#FFFFFF" text-color="#000000" active-text-color="#771010" router
                             :default-openeds="['0']" class="sidebar-menu">
                             <!-- 计算角色特定的菜单列表 -->
                             <template v-for="(v, i) in getRoleSpecificMenuList" :key="i">
@@ -237,7 +237,7 @@ const changeUser = async (type: string) => {
 
 /* 侧边栏样式 */
 .sidebar-container {
-    background-color: #2c3039;
+    background-color: #FFFFFF;
     border-right: 3px solid #e0e6ed;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     height: 100%;
@@ -246,38 +246,45 @@ const changeUser = async (type: string) => {
 
 .scrollbar {
     height: 100%;
-    background-color: #2c3039;
+    background-color: #FFFFFF;
 }
 
 .sidebar-menu {
     border: none;
     height: 100%;
+    font-weight:bold;
+    font-family: 'Microsoft YaHei', 'Arial', 'sans-serif';
 }
 
 .sidebar-menu :deep(.el-sub-menu__title) {
     padding-left: 20px !important;
+    margin:0 0 0 0;
     height: 50px;
     line-height: 50px;
-    border-bottom: 1px solid #34383f;
+    transition: all 0.1s ease;
+}
+.sidebar-menu :deep(.el-sub-menu__title:hover) {
+  background-color: #771010 !important;
+  color: #FFFFFF !important;
 }
 
 .sidebar-menu :deep(.el-menu-item) {
     padding-left: 40px !important;
+    margin:0 0 0 0;
     height: 45px;
     line-height: 45px;
-    border-bottom: 1px solid #34383f;
-    transition: all 0.3s ease;
+    transition: all 0.1s ease;
 }
 
 .sidebar-menu :deep(.el-menu-item:hover) {
-    background-color: #409eff !important;
-    color: #ffffff !important;
+    background-color: #771010 !important;
+    color: #FFFFFF !important;
 }
 
 .sidebar-menu :deep(.el-menu-item.is-active) {
-    background-color: #409eff !important;
-    color: #ffffff !important;
-    border-right: 3px solid #67c23a;
+    background-color: #771010 !important;
+    color: #FFFFFF !important;
+    border-right: 3px solid #771010;
 }
 
 /* 主内容区域 */
@@ -313,7 +320,7 @@ const changeUser = async (type: string) => {
 
 .tags-container :deep(.el-tag:hover) {
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
 }
 
 .content-area {
