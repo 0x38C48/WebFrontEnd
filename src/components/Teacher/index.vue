@@ -65,9 +65,14 @@
             </el-col>
           </el-row>
           <el-row :gutter="16">
-            <el-col :span="24">
+            <el-col :span="12">
               <el-form-item label="证件号">
                 <el-input v-model="itemData.card" placeholder="请输入证件号" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="学位">
+                <el-input v-model="itemData.degree" placeholder="请输入学位" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -87,6 +92,13 @@
             <el-col :span="24">
               <el-form-item label="地址">
                 <el-input v-model="itemData.address" placeholder="请输入地址" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :span="24">
+              <el-form-item label="个人介绍">
+                <el-input v-model="itemData.introduce" type="textarea" :rows="3" placeholder="请输入个人介绍" />
               </el-form-item>
             </el-col>
           </el-row>
