@@ -1,5 +1,7 @@
 <template>
+  <div v-loading="loading">
   <div class="studentInfoContainer">
+    <h2>个人简介</h2>
     <el-form ref="form" :model="data.info" label-width="120px" >
         <el-row>
             <el-col :span="21">
@@ -28,7 +30,7 @@
                     </el-col>
                     <el-col :span="7">
                         <el-form-item label="班级">
-                            <el-input v-model="data.info.name" readonly />
+                            <el-input v-model="data.info.className" readonly />
                         </el-form-item>
                     </el-col>
                     <el-col :span="7">
@@ -65,16 +67,16 @@
                             <el-input v-model="data.info.address" readonly />
                         </el-form-item>
                     </el-col>
-                    <el-col :span="7">
-                        <el-form-item label="邮箱">
-                            <el-input v-model="data.info.dept" readonly />
-                        </el-form-item>
-                    </el-col>
                 </el-row>
             </el-col>
             <el-col :span="3">
                 <div class="student-photo-container">
-                    <img :src="data.imgStr" alt="个人照片" class="student-photo" />
+                    <template v-if="data.imgStr">
+                        <img :src="data.imgStr" alt="个人照片" class="student-photo" />
+                    </template>
+                    <template v-else>
+                        <el-empty description="暂无照片" />
+                    </template>
                 </div>
             </el-col>
         </el-row>
@@ -142,6 +144,7 @@
             </el-col>
         </el-row>
     </div>
+  </div>
 </template>
 <script lang="ts" setup name="StudentIntroduce">
 import type { StudentIntroduceData } from "~/domain/models/info";
@@ -153,6 +156,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { StudentItem } from "~/domain/models/person";
 const presenter = container.get<StudentIntroducePresenter>(ID_STUDENT_INTRODUCE_PRESENTER);
 let data = ref<StudentIntroduceData>({ info: { personId: 0 } as StudentItem } as StudentIntroduceData);
+let loading = ref(false);
 let timer: string | number | NodeJS.Timeout | undefined;
 let myChartBar: ECharts | null = null;
 let myChartLine: ECharts | null = null;
@@ -167,7 +171,9 @@ const props = defineProps({
 });
 
 const initChart = async () => {
+    loading.value = true;
     await presenter.studentIntroduceInit(data.value);
+    loading.value = false;
     drawEcharts();
 };
 
@@ -234,7 +240,7 @@ const drawEcharts = () => {
         document.getElementById("myChartLine") as any
     );
     myChartLine.setOption({
-        title: { text: "日常消费" },
+        title: { text: "消费趋势" },
         tooltip: {},
         xAxis: {
             data: data.value.feeList.map((item) => item.title),

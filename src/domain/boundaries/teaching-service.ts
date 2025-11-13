@@ -3,6 +3,7 @@ import { OptionItem } from "~/infrastructure/models/base";
 import { CourseItem } from "~/domain/models/teaching";
 export interface ITeachingService {
     getCourseList(numName: string | null): Promise<CourseItem[]>;
+    getCourseListByTeacherId(personId: number): Promise<CourseItem[]>;
     courseDelete(courseId: number): Promise<DataResponse>;
     courseSave(data: CourseItem): Promise<DataResponse>;
     getStudentItemOptionList(): Promise<OptionItem[]>;

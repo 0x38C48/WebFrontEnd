@@ -73,6 +73,11 @@ const routes = [
     path: "/courseChoose",
     name: "CourseChoose",
     component: () => import("~/components/CourseChoose/index.vue"),
+  },
+  {
+      path: "/myTeachingCourse",
+      name: "MyTeachingCourse",
+      component: () => import("~/components/MyTeachingCourse/index.vue"),
   }
 ];
 //路由创建

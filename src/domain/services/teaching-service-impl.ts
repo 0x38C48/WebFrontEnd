@@ -45,6 +45,38 @@ export class TeachingServiceImpl implements ITeachingService {
             throw error;
         }
     }
+
+    public async getCourseListByTeacherId(
+        personId: number
+    ): Promise<CourseItem[]> {
+        try {
+            console.log("开始请求教师授课列表，教师ID:", personId);
+            
+            const res = await this.requestService.generalRequest("/api/course/getCourseListByTeacherId", {
+                personId: personId,
+            });
+            
+            // 验证响应数据
+            if (!res || !Array.isArray(res.data)) {
+                console.error("教师授课列表响应数据无效:", res);
+                throw new Error("教师授课列表数据格式错误");
+            }
+            
+            console.log(`成功获取教师授课列表，共${res.data.length}条记录`);
+            return res.data as CourseItem[];
+        } catch (error) {
+            console.error("获取教师授课列表失败:", error);
+            
+            // 针对数据库查询错误提供更具体的错误信息
+            if (error instanceof Error) {
+                if (error.message.includes("Unknown column") && error.message.includes("teacher_id")) {
+                    throw new Error("后端数据库查询错误: 课程表中不存在teacher_id字段。请联系管理员检查后端SQL查询语句。");
+                }
+            }
+            
+            throw error;
+        }
+    }
     //删除课程后台数据请求方法
     public async courseDelete(courseId: number): Promise<DataResponse> {
         const res = await this.requestService.generalRequest("/api/course/courseDelete", {

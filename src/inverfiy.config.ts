@@ -80,6 +80,7 @@ container.bind<TeacherPresenter>(ID_TEACHER_PRESENTER).to(TeacherPresenter).inSi
 container.bind<FamilyMemberPresenter>(ID_FAMILY_MEMBER_PRESENTER).to(FamilyMemberPresenter).inSingletonScope();
 container.bind<TeacherIntroducePresenter>(ID_TEACHER_INTRODUCE_PRESENTER).to(TeacherIntroducePresenter).inSingletonScope();
 
+
 container.bind<CoursePresenter>(ID_COURSE_PRESENTER).to(CoursePresenter).inSingletonScope();
 container.bind<ScorePresenter>(ID_SCORE_PRESENTER).to(ScorePresenter).inSingletonScope();
 

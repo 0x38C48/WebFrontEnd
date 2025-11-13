@@ -165,7 +165,7 @@
       </el-col>
     </el-row>
 
-    <el-table :data="data.dataList" :border="true" stripe style="width: 100%">
+    <el-table :data="data.dataList" :border="true" stripe style="width: 100%" v-loading="loading">
       <el-table-column label="序号" width="70" fixed>
         <template v-slot="scope">
           <el-tag type="info" effect="plain" size="small">
@@ -270,16 +270,21 @@ let memberVisible = ref(false);
 let memberPersonId = ref(0);
 let introduceVisible = ref(false);
 let introducePersonId = ref(0);
+let loading = ref(false);
 presenter.teacherInit().then((res) => {
   data.value = res;
 });
 const handleChangePage = async (val: number) => {
   data.value.pagination.currentPage = val;
+  loading.value=true;
   await presenter.getTeacherDataPage(data.value);
+  loading.value=false;
 };
 const doQuery = async () => {
   data.value.pagination.currentPage = 1;
+  loading.value=true;
   await presenter.getTeacherDataPage(data.value);
+  loading.value=false;
 };
 const doExport = async () => {
   await presenter.doExport(data.value);
