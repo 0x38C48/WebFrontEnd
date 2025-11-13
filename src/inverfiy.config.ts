@@ -51,6 +51,13 @@ import { ScorePresenter } from '~/domain/presenters/score-presenter';
 import {TeacherPresenter} from "~/domain/presenters/teacher-presenter";
 import { TeacherIntroducePresenter } from "~/domain/presenters/teacher-introduce-presenter";
 
+import { ID_LEAVE_SERVICE } from "./types";
+import { ILeaveService } from "./domain/boundaries/leave-service";
+import { LeaveServiceImpl } from "./domain/services/leave-service-impl";
+import { ID_LEAVE_PRESENTER } from "./types";
+import { LeavePresenter } from "./domain/presenters/leave-presenter";
+
+
 const container = new Container();
 container.bind<ILoginService>(ID_LOGIN_SERVICE).to(LoginServiceImpl).inSingletonScope();
 container.bind<IStoreService>(ID_STORE_SERVICE).to(StoreServiceImpl).inSingletonScope();
@@ -83,5 +90,11 @@ container.bind<TeacherIntroducePresenter>(ID_TEACHER_INTRODUCE_PRESENTER).to(Tea
 
 container.bind<CoursePresenter>(ID_COURSE_PRESENTER).to(CoursePresenter).inSingletonScope();
 container.bind<ScorePresenter>(ID_SCORE_PRESENTER).to(ScorePresenter).inSingletonScope();
+
+// 注册请假服务
+container.bind<ILeaveService>(ID_LEAVE_SERVICE).to(LeaveServiceImpl);
+// 注册请假Presenter
+container.bind<LeavePresenter>(ID_LEAVE_PRESENTER).to(LeavePresenter);
+
 
 export { container };
