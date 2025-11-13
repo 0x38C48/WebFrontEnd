@@ -179,4 +179,15 @@ export class CoursePresenter {
             return { code: -1, msg: '退选操作异常' };
         }
     }
+
+    // 获取学生选项列表（用于管理员为学生选课）
+    async getStudentItemOptionList() {
+        try {
+            return await this.service.getStudentItemOptionList();
+        } catch (error) {
+            console.error('获取学生选项列表失败:', error);
+            this.messageService.error('获取学生列表失败');
+            return [];
+        }
+    }
 }
