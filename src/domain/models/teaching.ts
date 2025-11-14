@@ -10,6 +10,7 @@ export interface CourseItem {
     coursePath: string;
     preCourse: string;
     preCourseId: number;
+    personId: number; // 授课教师ID
 }
 
 export interface CourseData {

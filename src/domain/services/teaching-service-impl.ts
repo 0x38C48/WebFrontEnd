@@ -86,8 +86,33 @@ export class TeachingServiceImpl implements ITeachingService {
     }
     //课程保存后台数据请求方法
     public async courseSave(data: CourseItem): Promise<DataResponse> {
-        const res = await this.requestService.generalRequest("/api/course/courseSave", data);
-        return res as DataResponse;
+        try {
+            // 确保personId字段存在且为数字类型
+            if (data.personId === undefined || data.personId === null) {
+                console.warn('课程保存时personId未定义，设置为默认值0');
+                data.personId = 0;
+            }
+            
+            console.log('发送到后端的课程数据:', data);
+            
+            // 构建包含所有必要字段的请求数据
+            const requestData = {
+                courseId: data.courseId,
+                personId: data.personId,
+                num: data.num,
+                name: data.name,
+                coursePath: data.coursePath,
+                credit: data.credit,
+                preCourseId: data.preCourseId
+            };
+            
+            console.log('构建的请求数据:', requestData);
+            const res = await this.requestService.generalRequest("/api/course/courseSave", requestData);
+            return res as DataResponse;
+        } catch (error) {
+            console.error('课程保存请求失败:', error);
+            throw error;
+        }
     }
     //获取学生选择项列表后台数据请求方法
     public async getStudentItemOptionList(): Promise<OptionItem[]> {

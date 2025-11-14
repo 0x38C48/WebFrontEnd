@@ -19,6 +19,12 @@
                         :label="item.title" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="授课教师" v-if="!isStudent">
+                <el-select v-model.number="itemData.personId" placeholder="请选择授课教师">
+                    <el-option v-for="teacher in teacherOptions" :key="teacher.value" :value="Number(teacher.value)"
+                        :label="teacher.title" />
+                </el-select>
+            </el-form-item>
         </el-form>
         <template #footer>
             <span class="dialog-footer">
@@ -77,6 +83,11 @@
                     {{ scope.row.preCourse }}
                 </template>
             </el-table-column>
+            <el-table-column label="授课教师" width="150" show-overflow-tooltip>
+                <template v-slot="scope">
+                    {{ scope.row.teacher && scope.row.teacher.personId ? getTeacherNameByPersonId(scope.row.teacher.personId) : '-' }}
+                </template>
+            </el-table-column>
         </el-table>
     </div>
 </template>
@@ -85,7 +96,7 @@ import type { CourseData, CourseItem } from "~/domain/models/teaching";
 import { container } from '~/inverfiy.config';
 import { ID_COURSE_PRESENTER } from '~/types';
 import { CoursePresenter } from "~/domain/presenters/course-presenter";
-import { ref, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useCurrentUser } from "~/composables/useCurrentUser";
 const presenter = container.get<CoursePresenter>(ID_COURSE_PRESENTER);
@@ -94,14 +105,55 @@ const { currentUserRole, isStudent } = useCurrentUser();
 let data = ref<CourseData>({} as CourseData);
 let itemData = ref<CourseItem>({} as CourseItem);
 let editVisible = ref(false);
+let teacherOptions = ref<any[]>([]);
 presenter.courseInit().then((res) => {
     data.value = res;
 });
-const doQuery = async () => {
-    await presenter.getCourseList(data.value);
+
+// 获取教师选项列表
+const loadTeacherOptions = async () => {
+    try {
+        // 由于getTeacherItemOptionList返回类型是OptionItem[]，直接使用
+        const teacherList = await presenter.getTeacherItemOptionList();
+        
+        // 检查是否为数组
+        if (Array.isArray(teacherList)) {
+            teacherOptions.value = teacherList;
+            console.log('教师选项列表已加载:', teacherOptions.value.length, '选项详情:', teacherOptions.value);
+        } else {
+            // 额外检查是否有itemList属性（处理可能的不同返回格式）
+            const response = teacherList as any;
+            if (response && response.itemList && Array.isArray(response.itemList)) {
+                teacherOptions.value = response.itemList;
+                console.log('从itemList中提取教师选项列表:', teacherOptions.value.length);
+            } else {
+                teacherOptions.value = [];
+                console.log('返回数据格式错误，已初始化为空列表');
+            }
+        }
+    } catch (error) {
+        console.error('加载教师选项失败:', error);
+        teacherOptions.value = [];
+    }
+};
+
+// 组件挂载时获取教师列表
+onMounted(() => {
+    // 所有用户都需要加载教师列表以显示授课教师名称
+    loadTeacherOptions();
+});
+const doQuery = () => {
+    // 直接调用presenter.getCourseList获取课程列表
+    presenter.getCourseList(data.value);
+    // 查询后再次加载教师列表以确保数据最新
+    loadTeacherOptions();
 };
 const addItem = async () => {
     itemData.value = presenter.addItem(data.value);
+    // 确保新添加的课程有personId字段
+    if (!itemData.value.personId) {
+        itemData.value.personId = 0;
+    }
     editVisible.value = true;
 };
 const editItem = async (index: number) => {
@@ -109,8 +161,17 @@ const editItem = async (index: number) => {
     editVisible.value = true;
 };
 const itemSubmit = async () => {
-    await presenter.itemSubmit(itemData.value, data.value);
-    editVisible.value = false;
+    try {
+        // 确保personId是数字类型
+        if (itemData.value.personId !== undefined && itemData.value.personId !== null) {
+            itemData.value.personId = Number(itemData.value.personId);
+        }
+        console.log('提交课程数据:', itemData.value);
+        await presenter.itemSubmit(itemData.value, data.value);
+        editVisible.value = false;
+    } catch (error) {
+        console.error('提交课程失败:', error);
+    }
 };
 const deleteItem = async (index: number) => {
     await presenter.deleteItem(data.value, index);
@@ -118,5 +179,34 @@ const deleteItem = async (index: number) => {
 
 const goToCourseChoose = () => {
     router.push('/courseChoose');
+};
+
+// 根据personId获取教师姓名
+const getTeacherNameByPersonId = (personId: any): string => {
+    // 简化实现，去除过多调试日志
+    
+    // 处理无效的personId情况
+    if (!personId && personId !== 0) {
+        return '-';
+    }
+    
+    // 安全检查teacherOptions
+    if (!Array.isArray(teacherOptions.value) || teacherOptions.value.length === 0) {
+        return '-';
+    }
+    
+    // 确保类型一致后查找
+    const targetPersonId = String(personId);
+    
+    // 在教师选项中查找匹配的项
+    const foundTeacher = teacherOptions.value.find(item => String(item.value) === targetPersonId);
+    
+    // 如果找到，返回title中提取的教师姓名（格式："编号-姓名"）
+    if (foundTeacher && foundTeacher.title) {
+        const nameParts = foundTeacher.title.split('-');
+        return nameParts.length > 1 ? nameParts[1] : foundTeacher.title;
+    }
+    
+    return '-';
 };
 </script>

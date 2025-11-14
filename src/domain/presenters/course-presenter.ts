@@ -1,14 +1,17 @@
 import { CourseData, CourseItem, CourseChooseResultData } from "~/domain/models/teaching";
-import { ID_TEACHING_SERVICE, ID_MESSAGE_SERVICE } from "~/types";
+import { ID_TEACHING_SERVICE, ID_MESSAGE_SERVICE, ID_REQUEST_SERVICE } from "~/types";
 import { IMessageService } from "~/infrastructure/boundaries/message-service";
 import { ITeachingService } from "~/domain/boundaries/teaching-service";
+import { IRequestService } from "~/infrastructure/boundaries/request-service";
 import { inject, injectable } from "inversify";
 import { PersonItem } from "../models/person";
+import { OptionItem } from "~/infrastructure/models/base";
 @injectable()
 export class CoursePresenter {
     constructor(
         @inject(ID_MESSAGE_SERVICE) private readonly messageService: IMessageService,
-        @inject(ID_TEACHING_SERVICE) private readonly service: ITeachingService
+        @inject(ID_TEACHING_SERVICE) private readonly service: ITeachingService,
+        @inject(ID_REQUEST_SERVICE) private readonly requestService: IRequestService
     ) { }
     public makeSelectCourseList(data: CourseData): void {
         data.courseSelectList = []
@@ -38,15 +41,34 @@ export class CoursePresenter {
     }
     public editItem(data: CourseData, index: number): CourseItem {
         let item = { ...data.dataList[index] } as CourseItem;
+        // 确保personId字段存在，防止参数缺失
+        if (item.personId === undefined || item.personId === null) {
+            item.personId = 0;
+        }
+        console.log('编辑课程数据:', item);
         return item;
     }
     public async itemSubmit(item: CourseItem, data: CourseData): Promise<void> {
-        const res = await this.service.courseSave(item);
-        if (res.code == 0) {
-            this.messageService.success("添加修改成功");
-            this.getCourseList(data);
-        } else {
-            this.messageService.error(res.msg);
+        try {
+            // 确保item包含personId字段，防止参数缺失
+            if (item.personId === undefined || item.personId === null) {
+                console.warn('课程保存时未指定授课教师ID，已设置为默认值0');
+                item.personId = 0;
+            }
+            
+            console.log('提交课程数据:', item);
+            // 执行保存操作
+            const res = await this.service.courseSave(item);
+            
+            if (res.code === 0) {
+                this.messageService.success("添加修改成功");
+                await this.getCourseList(data);
+            } else {
+                this.messageService.error(res.msg || "保存失败");
+            }
+        } catch (error) {
+            console.error('保存课程失败:', error);
+            this.messageService.error('保存课程时发生错误');
         }
     }
     // 删除课程（管理员功能）
@@ -187,6 +209,24 @@ export class CoursePresenter {
         } catch (error) {
             console.error('获取学生选项列表失败:', error);
             this.messageService.error('获取学生列表失败');
+            return [];
+        }
+    }
+    
+    // 获取教师选项列表（用于课程管理选择授课教师）
+    async getTeacherItemOptionList() {
+        try {
+            console.log('开始获取教师选项列表');
+            const res = await this.requestService.generalRequest("/api/studentLeave/getTeacherItemOptionList", {});
+            if (res && res.itemList && Array.isArray(res.itemList)) {
+                console.log(`成功获取到 ${res.itemList.length} 位教师信息`);
+                return res.itemList as OptionItem[];
+            }
+            console.error('教师列表响应数据格式错误:', res);
+            return [];
+        } catch (error) {
+            console.error('获取教师选项列表失败:', error);
+            this.messageService.error('获取教师列表失败');
             return [];
         }
     }
