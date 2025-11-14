@@ -252,18 +252,78 @@ const drawEcharts = () => {
     myChartLine = init(
         document.getElementById("myChartLine") as any
     );
+    
+    // 按课程号排序并计算累计平均分
     const sorted = [...data.value.scoreList].sort((a, b) => String(a.courseNum).localeCompare(String(b.courseNum)));
+    const cumulativeAverages = [];
+    let sum = 0;
+    
+    sorted.forEach((item, index) => {
+      sum += Number(item.mark);
+      cumulativeAverages.push(Math.round(sum / (index + 1) * 10) / 10);
+    });
+    
     myChartLine.setOption({
-        title: { text: "成绩趋势" },
-        tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: sorted.map(item => item.courseNum) },
-        yAxis: { type: "value", min: 0, max: 100 },
+        title: { 
+          text: "成绩趋势",
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 'normal'
+          }
+        },
+        tooltip: { 
+          trigger: "axis",
+          formatter: function(params: any) {
+            const index = params[0].dataIndex;
+            const currentScore = sorted[index].mark;
+            const avgScore = params[0].value;
+            return `${params[0].name}<br/>当前成绩: ${currentScore}分<br/>累计平均: ${avgScore}分`;
+          }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: { 
+          type: "category", 
+          data: sorted.map(item => item.courseNum),
+          axisLabel: {
+            interval: 0,
+            rotate: 45
+          }
+        },
+        yAxis: { 
+          type: "value", 
+          min: 60, 
+          max: 100,
+          name: '平均分'
+        },
         series: [
             {
-                name: "成绩",
+                name: "累计平均分",
                 type: "line",
-                data: sorted.map(item => Number(item.mark)),
+                data: cumulativeAverages,
                 smooth: true,
+                symbol: 'circle',
+                symbolSize: 8,
+                lineStyle: {
+                  width: 3,
+                  color: '#1890ff'
+                },
+                itemStyle: {
+                  color: '#1890ff'
+                },
+                markLine: {
+                  data: [{
+                    type: 'average',
+                    name: '总平均',
+                    label: {
+                      formatter: '总平均: {c}'
+                    }
+                  }]
+                }
             },
         ],
     });

@@ -429,7 +429,7 @@ const registerSubmit = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(119, 16, 16, 0.3) 0%, rgba(44, 62, 80, 0.4) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, rgba(44, 62, 80, 0.4) 100%);
 }
 
 .slider-indicators {
@@ -452,7 +452,7 @@ const registerSubmit = async () => {
 }
 
 .indicator.active {
-  background: #771010;
+  background: var(--color-primary);
   transform: scale(1.2);
 }
 
@@ -584,7 +584,7 @@ const registerSubmit = async () => {
   font-family: "微软雅黑";
   font-weight: bold;
   font-size: 28px;
-  color: #771010;
+  color: var(--color-primary-dark);
   margin-bottom: 30px;
   margin-top: 10px;
 }

@@ -11,6 +11,7 @@ import "element-plus/dist/index.css";
 // or use cdn, uncomment cdn link in `index.html`
 
 import "~/styles/index.scss";
+import "./styles/variables.css";
 import "uno.css";
 import router from "./router";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";

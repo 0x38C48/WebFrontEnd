@@ -20,6 +20,9 @@ export interface TeacherIntroduceData {
     info: TeacherItem;
     personId: number | null;
     imgStr: string;
+    courseList: CourseItem[];     // 教师授课列表
+    courseStat: OptionItem[];   // 课程统计（如各等级数量）
+    semesterTrend: { semester: string; avgScore: number }[]; // 学期平均分趋势
 }
 export interface SystemIntroduceData {
 }

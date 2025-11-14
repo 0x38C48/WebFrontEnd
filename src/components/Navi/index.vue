@@ -35,7 +35,7 @@
             <el-container class="body-container">
                 <el-aside width="230px" class="sidebar-container">
                     <el-scrollbar class="scrollbar">
-                        <el-menu background-color="#FFFFFF" text-color="#000000" active-text-color="#771010" router
+                        <el-menu background-color="#FFFFFF" text-color="#000000" active-text-color="var(--color-primary)" router
                             :default-openeds="['0']" class="sidebar-menu">
                             <!-- 计算角色特定的菜单列表 -->
                             <template v-for="(v, i) in getRoleSpecificMenuList" :key="i">
@@ -243,8 +243,8 @@ const changeUser = async (type: string) => {
 
 /* Header 样式 */
 .header-container {
-    background: #771010;
-    border-bottom: 4px solid #771010;
+    background: var(--color-primary);
+    border-bottom: 4px solid var(--color-primary);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 }
@@ -311,7 +311,7 @@ const changeUser = async (type: string) => {
     transition: all 0.1s ease;
 }
 .sidebar-menu :deep(.el-sub-menu__title:hover) {
-  background-color: #771010 !important;
+  background-color: var(--color-primary) !important;
   color: #FFFFFF !important;
 }
 
@@ -331,7 +331,7 @@ const changeUser = async (type: string) => {
 .sidebar-menu :deep(.el-menu-item.is-active) {
     background-color: #771010 !important;
     color: #FFFFFF !important;
-    border-right: 3px solid #771010;
+    border-right: 3px solid var(--color-primary);
 }
 
 /* 主内容区域 */

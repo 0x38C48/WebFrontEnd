@@ -15,9 +15,9 @@ export class TeacherIntroducePresenter {
         if (res.code == 0) {
             data.info = res.data.info;
             data.personId = data.info.personId;
-            // data.feeList = res.data.feeList;
-            // data.markList = res.data.markList;
-            // data.scoreList = res.data.scoreList;
+            data.courseList = res.data.courseList || [];
+            data.courseStat = res.data.courseStat || [];
+            data.semesterTrend = res.data.semesterTrend || [];
             //res = await this.service.getPhotoImageStr("photo/" + data.info.personId + ".jpg");
             let re = await this.service.getPhotoImageStr("photo/" + data.info.personId + ".jpg");
             console.log("res:" + re.statusText);
