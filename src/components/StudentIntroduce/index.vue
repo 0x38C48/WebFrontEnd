@@ -222,35 +222,48 @@ const drawEcharts = () => {
         document.getElementById("myChartBar") as any
     );
     myChartBar.setOption({
-        title: { text: "日常消费" },
-        tooltip: {},
+        title: { text: "课程成绩" },
+        tooltip: { trigger: "axis" },
         xAxis: {
-            data: data.value.feeList.map((item) => item.title),
+            type: "category",
+            data: data.value.scoreList.map((item) => item.courseName),
+            axisLabel: { interval: 0, rotate: 30 }
         },
-        yAxis: {},
+        yAxis: { type: "value", min: 0, max: 100 },
+        visualMap: {
+            show: false,
+            pieces: [
+                { min: 90, color: "#2E7D32" },
+                { min: 80, max: 89, color: "#67C23A" },
+                { min: 70, max: 79, color: "#F7BA2A" },
+                { min: 60, max: 69, color: "#E67E22" },
+                { max: 59, color: "#F56C6C" }
+            ]
+        },
         series: [
             {
-                name: "消费",
+                name: "成绩",
                 type: "bar",
-                data: data.value.feeList.map((item) => item.value),
+                data: data.value.scoreList.map((item) => Number(item.mark)),
+                label: { show: true, position: "top" }
             },
         ],
     });
     myChartLine = init(
         document.getElementById("myChartLine") as any
     );
+    const sorted = [...data.value.scoreList].sort((a, b) => String(a.courseNum).localeCompare(String(b.courseNum)));
     myChartLine.setOption({
-        title: { text: "消费趋势" },
-        tooltip: {},
-        xAxis: {
-            data: data.value.feeList.map((item) => item.title),
-        },
-        yAxis: {},
+        title: { text: "成绩趋势" },
+        tooltip: { trigger: "axis" },
+        xAxis: { type: "category", data: sorted.map(item => item.courseNum) },
+        yAxis: { type: "value", min: 0, max: 100 },
         series: [
             {
-                name: "消费",
+                name: "成绩",
                 type: "line",
-                data: data.value.feeList.map((item) => item.value),
+                data: sorted.map(item => Number(item.mark)),
+                smooth: true,
             },
         ],
     });
@@ -260,6 +273,7 @@ const drawEcharts = () => {
     myChartPie.setOption({
         title: { text: "成绩分布" },
         tooltip: {},
+        color: ["#2E7D32", "#67C23A", "#F7BA2A", "#E67E22", "#F56C6C"],
         legend: {
             orient: "horizontal",
             x: "center",
