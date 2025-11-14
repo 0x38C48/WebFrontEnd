@@ -1,6 +1,6 @@
 <template>
-    <el-dialog :title="dialogTitle" v-model="editVisible" :close-on-click-modal="false">
-        <el-form ref="form" :model="editedNode" class="edit-form" label-width="120px">
+    <el-dialog :title="dialogTitle" v-model="editVisible" :close-on-click-modal="false" width="640px">
+        <el-form ref="form" :model="editedNode" class="edit-form" label-width="120px" size="small">
             <el-form-item label="父节点">
                 <el-input v-model="editedNode.parentTitle" readonly />
             </el-form-item>
@@ -21,34 +21,43 @@
         </el-form>
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" plain @click="confirm()">提交</el-button>
-                <el-button type="primary" plain @click="editVisible = false">取消</el-button>
+                <el-button type="primary" @click="confirm()">提交</el-button>
+                <el-button @click="editVisible = false">取消</el-button>
             </span>
         </template>
     </el-dialog>
-    <div>
-        <div>
-            <el-row :gutter="20" style="margin-bottom: 10px;">
-                <el-col :span="12" style="text-align: left;">
-                    <el-button type="danger" plain @click="addItemFirst()">添加一级菜单</el-button>
-                </el-col>
-            </el-row>
-        </div>
+    <el-card shadow="hover">
+        <template #header>
+            <div style="display: flex; align-items: center;">
+                <el-icon style="margin-right: 8px; color: #409EFF;">
+                    <Setting />
+                </el-icon>
+                <span style="font-size: 16px; font-weight: bold;">菜单管理</span>
+            </div>
+        </template>
+        <el-row :gutter="20" style="margin-bottom: 10px;">
+            <el-col :span="24" style="text-align: left;">
+                <el-button type="primary" @click="addItemFirst()">添加一级菜单</el-button>
+            </el-col>
+        </el-row>
         <div class="custom-tree-container" v-if="data.nodes !== null">
-            <el-tree :data="data.nodes" show-checkbox node-key="id" default-expand-all :expand-on-click-node="false">
+            <el-tree :data="data.nodes" show-checkbox node-key="id" default-expand-all :expand-on-click-node="false" highlight-current>
                 <template #default="{ node, data }">
-                    <span class="custom-tree-node">
+                    <span class="custom-tree-node" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span>{{ node.label }}</span>
                         <span>
-                            <a @click="addItem(data)"> 添加 </a>
-                            <a style="margin-left: 5px" @click="editItem(data)"> 修改 </a>
-                            <a style="margin-left: 5px" @click="deleteItem(data)"> 删除 </a>
+                            <el-button link type="primary" @click="addItem(data)">添加</el-button>
+                            <el-button link type="warning" @click="editItem(data)">修改</el-button>
+                            <el-button link type="danger" @click="deleteItem(data)">删除</el-button>
                         </span>
                     </span>
                 </template>
             </el-tree>
         </div>
-    </div>
+        <div v-else>
+            <el-empty description="暂无菜单数据" />
+        </div>
+    </el-card>
 </template>
 <script lang="ts" setup name="MenuManage">
 import type { MenuManageData, TreeNode } from "~/domain/models/system";

@@ -1,6 +1,6 @@
 <template>
-    <el-dialog :title="dialogTitle" v-model="editVisible" :close-on-click-modal="false">
-        <el-form ref="form" :model="editedNode" class="edit-form" label-width="120px">
+    <el-dialog :title="dialogTitle" v-model="editVisible" :close-on-click-modal="false" width="560px">
+        <el-form ref="form" :model="editedNode" class="edit-form" label-width="120px" size="small">
             <el-form-item label="字典名">
                 <el-input v-model="editedNode.parentTitle" readonly />
             </el-form-item>
@@ -13,26 +13,35 @@
         </el-form>
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" plain @click="confirm()">提交</el-button>
-                <el-button type="primary" plain @click="editVisible = false">取消</el-button>
+                <el-button type="primary" @click="confirm()">提交</el-button>
+                <el-button @click="editVisible = false">取消</el-button>
             </span>
         </template>
     </el-dialog>
-    <div>
-        <div>
-            <el-row :gutter="20" style="margin-bottom: 10px;">
-                <el-col :span="12" style="text-align: left;">
-                    <el-button type="danger" plain @click="addItemFirst()">添加数据项名</el-button>
-                    <el-button type="danger" plain @click="addItem()">添加数据项</el-button>
-                    <el-button type="danger" plain @click="editItem()">修改</el-button>
-                    <el-button type="danger" plain @click="deleteItem()">删除</el-button>
-                </el-col>
-            </el-row>
+    <el-card shadow="hover">
+        <template #header>
+            <div style="display: flex; align-items: center;">
+                <el-icon style="margin-right: 8px; color: #409EFF;">
+                    <Setting />
+                </el-icon>
+                <span style="font-size: 16px; font-weight: bold;">字典管理</span>
+            </div>
+        </template>
+        <el-row :gutter="12" style="margin-bottom: 10px;">
+            <el-col :span="24" style="text-align: left;">
+                <el-button type="primary" @click="addItemFirst()" style="margin-right: 8px;">添加数据项名</el-button>
+                <el-button type="success" @click="addItem()" style="margin-right: 8px;">添加数据项</el-button>
+                <el-button type="warning" @click="editItem()" style="margin-right: 8px;">修改</el-button>
+                <el-button type="danger" @click="deleteItem()">删除</el-button>
+            </el-col>
+        </el-row>
+        <div v-if="data.nodes !== null">
+            <el-tree :data="data.nodes" :props="data.defaultProps" accordion highlight-current default-expand-all @node-click="onNodeClick"></el-tree>
         </div>
-        <div style="margin-top: 5px" v-if="data.nodes !== null">
-            <el-tree :data="data.nodes" :props="data.defaultProps" accordion @node-click="onNodeClick"></el-tree>
+        <div v-else>
+            <el-empty description="暂无字典数据" />
         </div>
-    </div>
+    </el-card>
 </template>
 <script lang="ts" setup name="DictionaryManage">
 import type { DictionaryManageData, TreeNode } from "~/domain/models/system";
