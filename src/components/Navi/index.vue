@@ -126,42 +126,89 @@ const routerPath = (path: string) => {
         const role = appStore.userInfo.role;
         const originalMenus = systemConfig.value.menuList;
         
-        // 对于管理员和教师，返回原始菜单
+        // 创建菜单副本以避免修改原始数据
+        const menuCopy = JSON.parse(JSON.stringify(originalMenus));
+        
+        // 将请假管理从个人信息移动到教务管理
+        moveLeaveMenuToTeaching(menuCopy);
+        
+        // 对于管理员和教师，返回修改后的菜单
         if (role === 'ROLE_ADMIN' || role === 'ROLE_TEACHER') {
-            return originalMenus;
+            return menuCopy;
         }
         
         // 对于学生，添加或修改菜单项
         if (role === 'ROLE_STUDENT') {
-            // 创建菜单副本
-            const studentMenus = JSON.parse(JSON.stringify(originalMenus));
-            
             // 检查是否已有教务管理菜单
-            let teachingMenuIndex = studentMenus.findIndex((menu: any) => menu.title === '教务管理');
+            let teachingMenuIndex = menuCopy.findIndex((menu: any) => menu.title === '教务管理');
             
             if (teachingMenuIndex === -1) {
                 // 如果没有，添加教务管理菜单，只包含选课和成绩查看功能
-                studentMenus.push({
+                menuCopy.push({
                     title: '教务管理',
                     sList: [
                         { title: '选课管理', path: 'courseChoose' },
-                        { title: '成绩查询', path: 'score' }
+                        { title: '成绩查询', path: 'score' },
+                        { title: '请假管理', path: 'leave' } // 为学生也添加请假管理
                     ]
                 });
             } else {
-                // 如果有，修改为只包含选课和成绩查看功能
-                studentMenus[teachingMenuIndex].sList = [
+                // 如果有，修改为包含选课、成绩查看和请假管理功能
+                menuCopy[teachingMenuIndex].sList = [
                     { title: '选课管理', path: 'courseChoose' },
-                    { title: '成绩查询', path: 'score' }
+                    { title: '成绩查询', path: 'score' },
+                    { title: '请假管理', path: 'leave' } // 为学生也添加请假管理
                 ];
             }
             
-            return studentMenus;
+            return menuCopy;
         }
         
-        // 默认返回原始菜单
-        return originalMenus;
+        // 默认返回修改后的菜单
+        return menuCopy;
     });
+    
+    // 将请假管理从个人信息移动到教务管理的方法
+    function moveLeaveMenuToTeaching(menus: any[]) {
+        let personalInfoMenuIndex = -1;
+        let teachingMenuIndex = -1;
+        let leaveMenuIndex = -1;
+        let leaveMenu = null;
+        
+        // 查找个人信息和教务管理菜单
+        menus.forEach((menu, index) => {
+            if (menu.title === '个人信息') {
+                personalInfoMenuIndex = index;
+                // 在个人信息子菜单中查找请假管理
+                if (menu.sList && Array.isArray(menu.sList)) {
+                    leaveMenuIndex = menu.sList.findIndex((subMenu: any) => subMenu.title === '请假管理');
+                    if (leaveMenuIndex !== -1) {
+                        leaveMenu = menu.sList[leaveMenuIndex];
+                    }
+                }
+            } else if (menu.title === '教务管理') {
+                teachingMenuIndex = index;
+            }
+        });
+        
+        // 如果找到了请假管理且找到了教务管理，则移动
+        if (leaveMenu && personalInfoMenuIndex !== -1 && teachingMenuIndex !== -1) {
+            // 从个人信息子菜单中移除请假管理
+            if (menus[personalInfoMenuIndex].sList && leaveMenuIndex !== -1) {
+                menus[personalInfoMenuIndex].sList.splice(leaveMenuIndex, 1);
+            }
+            
+            // 确保教务管理有子菜单数组
+            if (!menus[teachingMenuIndex].sList) {
+                menus[teachingMenuIndex].sList = [];
+            }
+            
+            // 将请假管理添加到教务管理子菜单中
+            if (!menus[teachingMenuIndex].sList.find((subMenu: any) => subMenu.title === '请假管理')) {
+                menus[teachingMenuIndex].sList.push(leaveMenu);
+            }
+        }
+    }
 
 const changeUser = async (type: string) => {
         console.log("type", type);
