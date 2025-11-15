@@ -9,7 +9,17 @@ export class ForgetPasswordServiceImpl implements IForgetPasswordService {
      */
     async resetPassword(request: ResetPasswordRequest): Promise<void> {
         try {
-            const res = await axios.post("/auth/resetPassword", request);
+            // 根据openapi.json格式构建请求参数
+            const requestData = {
+                data: {
+                    key: {
+                        username: request.username,
+                        newPassword: request.newPassword
+                    }
+                }
+            };
+            
+            const res = await axios.post("/api/base/updatePassword", requestData);
             
             if (res.status === 200 && res.data.code === 0) {
                 // 重置成功

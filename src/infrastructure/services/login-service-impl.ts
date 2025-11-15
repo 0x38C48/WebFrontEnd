@@ -1,9 +1,13 @@
 import axios from "axios";
 import { ILoginService } from "../boundaries/login-service";
 import { LoginRequest, JwtResponse } from "../models/login";
+import { ValidateServiceImpl } from "./validate-service-impl";
+import { ElMessage } from "element-plus";
+
 export class LoginServiceImpl implements ILoginService {
   async login(loginRequest: LoginRequest): Promise<JwtResponse> {
     try {
+      // 登录时不验证验证码
       const res = await axios.post("/auth/login", loginRequest);
       //等待从服务器返还
       if (

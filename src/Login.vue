@@ -33,6 +33,7 @@
         <el-form-item label="密码">
           <el-input type="password" v-model="loginReq.password" placeholder="请输入密码 " style="margin-bottom: 0;" class="login-input"/>
         </el-form-item>
+
         <el-form-item>
           <el-link type="primary" class="forget-link" @click="toForgetPassword()">忘记密码</el-link>
           <span color="#409EFF">|</span>
@@ -168,8 +169,8 @@ onUnmounted(() => {
   }
 });
 
-//const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456', code: '' });
-const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456', code: '' });
+//const loginReq: LoginRequest = reactive({ username: '2022030001', password: '123456' });
+const loginReq: LoginRequest = reactive({ username: 'admin', password: '123456' });
 //const registerReq: RegisterRequest = reactive({ username: '', password: '', perName: '', role: '', code: '' });
 //开发中预置registerReq的值来调试：
 const valReq: ValidCodeRequest = reactive({username: '', password: '', perName: '', role: '', email: ''});
@@ -177,7 +178,8 @@ const registerReq: RegisterRequest = reactive({ username: '202400002222', passwo
 const dialogVisible = ref(false);
 const forgetPasswordDialogVisible = ref(false);
 const captchaImageUrl = ref(''); // 用于存储验证码图片的URL
-const registerFormRef = ref<InstanceType<typeof ElForm>>()
+const registerValidateCodeId = ref<number>(0); // 用于存储注册验证码ID
+const registerFormRef = ref<InstanceType<typeof ElForm>>();
 
 // 忘记密码相关变量
 const forgetPasswordReq: ForgetPasswordRequest = reactive({
@@ -186,11 +188,14 @@ const forgetPasswordReq: ForgetPasswordRequest = reactive({
   emailCode: '', // 邮箱验证码
   imageCode: '', // 图片验证码
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  emailValidateCodeId: 0, // 邮箱验证码ID
+  imageValidateCodeId: 0 // 图片验证码ID
 })
 const forgetPasswordFormRef = ref<InstanceType<typeof ElForm>>()
 const isResetting = ref(false)
 const forgetPasswordCaptchaImageUrl = ref(''); // 用于存储忘记密码验证码图片的URL
+const forgetPasswordImageValidateCodeId = ref<number>(0); // 用于存储忘记密码图片验证码ID
 
 const registerRules: FormRules<RegisterRequest> = reactive({
   username: [
@@ -212,10 +217,10 @@ const registerRules: FormRules<RegisterRequest> = reactive({
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
-  // code: [
-  //   { required: true, message: '请输入验证码', trigger: 'blur' },
-  //   { len: 6, message: '验证码长度为 6 个字符', trigger: 'blur' },
-  // ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { len: 4, message: '验证码长度为 4 个字符', trigger: 'blur' },
+  ],
 })
 
 // 忘记密码验证规则
@@ -229,8 +234,8 @@ const forgetPasswordRules: FormRules<ForgetPasswordRequest> = reactive({
     // 移除邮箱格式验证，演示版本不做验证
   ],
   imageCode: [
-    //{ required: true, message: '请输入图片验证码', trigger: 'blur' },暂时不强制要求
-    { len: 6, message: '图片验证码长度为6个字符', trigger: 'blur' },
+    { required: true, message: '请输入图片验证码', trigger: 'blur' },
+    { len: 4, message: '图片验证码长度为4个字符', trigger: 'blur' },
   ],
   emailCode: [
     { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
@@ -270,9 +275,12 @@ const updateCaptchaRegister = () => {
   const validateServiceImpl = new ValidateServiceImpl();
   validateServiceImpl.getValidateCode(vReq).then(res => {
     captchaImageUrl.value = res.data.img;
+    registerValidateCodeId.value = res.data.validateCodeId || 0;
   });
   //ElMessage.success("成功更新验证码。");
 };
+
+
 
 // 获取忘记密码验证码
 const updateCaptchaForgetPassword = () => {
@@ -282,6 +290,8 @@ const updateCaptchaForgetPassword = () => {
   const validateServiceImpl = new ValidateServiceImpl();
   validateServiceImpl.getValidateCode(vReq).then(res => {
     forgetPasswordCaptchaImageUrl.value = res.data.img;
+    forgetPasswordImageValidateCodeId.value = res.data.validateCodeId || 0;
+    forgetPasswordReq.imageValidateCodeId = res.data.validateCodeId || 0;
   });
 };
 
@@ -344,6 +354,16 @@ const resetPassword = async () => {
   
   const valid = await forgetPasswordFormRef.value.validate()
   if (valid) {
+    // 先校验图片验证码
+    const validateService = new ValidateServiceImpl();
+    const isValidImageCode = await validateService.validateCode(forgetPasswordReq.imageCode, forgetPasswordReq.username, forgetPasswordReq.imageValidateCodeId);
+    
+    if (!isValidImageCode) {
+      ElMessage.error('图片验证码错误，请重新输入');
+      updateCaptchaForgetPassword(); // 刷新验证码
+      return;
+    }
+    
     // 邮箱验证码验证（演示版本固定为123456）
     if (forgetPasswordReq.emailCode !== '123456') {
       ElMessage.error('邮箱验证码错误，请输入123456')
@@ -379,11 +399,16 @@ const registerSubmit = async () => {
       registerReq1.role = 'STUDENT';
     if(registerReq.role === '教师')
       registerReq1.role = 'TEACHER';
+    registerReq1.validateCodeId = registerValidateCodeId.value;
     //ElMessage.info('正在开发注册')
     // 待填充注册逻辑
     const registerService = new RegisterServiceImpl();
-    await registerService.register(registerReq1);
-    dialogVisible.value = false; // 注册成功后关闭对话框
+    try {
+      await registerService.register(registerReq1);
+      dialogVisible.value = false; // 注册成功后关闭对话框
+    } catch (error) {
+      // 注册失败处理
+    }
   } else {
     ElMessage.error('请检查输入信息')
   }
@@ -429,7 +454,7 @@ const registerSubmit = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--color-primary) 0%, rgba(44, 62, 80, 0.4) 100%);
+  background: linear-gradient(135deg, rgba(119, 16, 16, 0.3) 0%, rgba(44, 62, 80, 0.4) 100%);
 }
 
 .slider-indicators {
@@ -452,7 +477,7 @@ const registerSubmit = async () => {
 }
 
 .indicator.active {
-  background: var(--color-primary);
+  background: #771010;
   transform: scale(1.2);
 }
 
@@ -584,7 +609,7 @@ const registerSubmit = async () => {
   font-family: "微软雅黑";
   font-weight: bold;
   font-size: 28px;
-  color: var(--color-primary-dark);
+  color: #771010;
   margin-bottom: 30px;
   margin-top: 10px;
 }

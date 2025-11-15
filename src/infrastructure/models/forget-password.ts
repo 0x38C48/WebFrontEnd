@@ -5,6 +5,8 @@ export interface ForgetPasswordRequest {
   imageCode: string; // 图片验证码
   newPassword: string;
   confirmPassword: string;
+  emailValidateCodeId?: number;
+  imageValidateCodeId?: number;
 }
 
 export interface ResetPasswordRequest {

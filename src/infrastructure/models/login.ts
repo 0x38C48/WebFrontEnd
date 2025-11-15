@@ -1,8 +1,6 @@
 export interface LoginRequest {
     username: string;
     password: string;
-    code: string;
-
 }
 export interface JwtResponse {
     token: string;

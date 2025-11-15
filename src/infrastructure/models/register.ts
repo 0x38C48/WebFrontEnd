@@ -5,4 +5,5 @@ export interface RegisterRequest {
     role: string;
     email: string;
     code: string;
+    validateCodeId?: number;
 }
