@@ -67,6 +67,38 @@
           <el-descriptions-item label="先修课程">{{ selectedCourse.preCourse || '无' }}</el-descriptions-item>
           <el-descriptions-item label="课程路径" :span="2">{{ selectedCourse.coursePath }}</el-descriptions-item>
         </el-descriptions>
+
+        <div style="margin-top: 16px;">
+          <el-text type="primary">选课学生</el-text>
+        </div>
+        <el-table :data="chooseRows" :border="true" :header-cell-style="{ textAlign: 'center' }"
+                  :cell-style="{ textAlign: 'center' }" v-loading="chooseLoading" style="margin-top: 8px;">
+          <el-table-column label="序号" width="70">
+            <template #default="scope">
+              {{ scope.$index + 1 }}
+            </template>
+          </el-table-column>
+          <el-table-column label="学生学号" width="120">
+            <template #default="scope">
+              {{ scope.row.studentNum || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="姓名" width="140">
+            <template #default="scope">
+              {{ scope.row.studentName || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="成绩" width="100">
+            <template #default="scope">
+              <span>{{ scope.row.mark ?? '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="班级" width="120">
+            <template #default="scope">
+              {{ scope.row.className || '-' }}
+            </template>
+          </el-table-column>
+        </el-table>
       </div>
     </el-dialog>
   </div>
@@ -89,6 +121,16 @@ const loading = ref(false)
 const courses = ref<CourseItem[]>([])
 const detailDialogVisible = ref(false)
 const selectedCourse = ref<CourseItem | null>(null)
+const chooseLoading = ref(false)
+interface ChooseRow {
+  courseChooseId?: number
+  personId: number
+  studentNum?: string
+  className?: string
+  studentName?: string
+  mark?: number
+}
+const chooseRows = ref<ChooseRow[]>([])
 
 // 加载教师授课列表
 const loadTeachingCourses = async () => {
@@ -120,6 +162,7 @@ const loadTeachingCourses = async () => {
 const viewCourseDetails = (course: CourseItem) => {
   selectedCourse.value = course
   detailDialogVisible.value = true
+  loadCourseChooseRows(course.courseId)
 }
 
 // 编辑课程
@@ -130,6 +173,53 @@ const editCourse = (course: CourseItem) => {
 onMounted(() => {
   loadTeachingCourses()
 })
+
+const loadCourseChooseRows = async (courseId: number) => {
+  chooseLoading.value = true
+  try {
+    const res = await teachingService.getCourseChooseList(0, courseId)
+    let list: any[] = []
+    if (res && Array.isArray(res.data)) {
+      list = res.data
+    } else if (res && res.data && Array.isArray(res.data.dataList)) {
+      list = res.data.dataList
+    }
+
+    let scoreMap: Record<number, { mark?: number; studentNum?: string; studentName?: string }> = {}
+    try {
+      const scoreRes = await teachingService.getScoreList(0, courseId)
+      if (Array.isArray(scoreRes)) {
+        for (const s of scoreRes as any[]) {
+          const pid = Number(s.personId || 0)
+          if (pid > 0) {
+            scoreMap[pid] = { mark: s.mark, studentNum: s.studentNum, studentName: s.studentName }
+          }
+        }
+      }
+    } catch (e) {}
+
+    chooseRows.value = list.map((it: any) => {
+      const pid = Number(it.personId || 0)
+      const score = pid > 0 ? scoreMap[pid] || {} : {}
+      return {
+        courseChooseId: it.courseChooseId,
+        personId: pid,
+        studentNum: score.studentNum,
+        className: it.className,
+        studentName: score.studentName,
+        mark: score.mark,
+      } as ChooseRow
+    })
+    if (!chooseRows.value.length) {
+      ElMessage.info('暂无该课程的选课学生')
+    }
+  } catch (error) {
+    ElMessage.error('获取选课学生失败')
+    chooseRows.value = []
+  } finally {
+    chooseLoading.value = false
+  }
+}
 </script>
 
 <style scoped lang="scss">
