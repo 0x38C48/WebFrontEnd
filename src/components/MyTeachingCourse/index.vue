@@ -56,7 +56,7 @@
     <el-dialog
       v-model="detailDialogVisible"
       title="课程详情"
-      width="600px"
+      width="800px"
       :close-on-click-modal="false"
     >
       <div v-if="selectedCourse" class="course-detail">
@@ -72,30 +72,78 @@
           <el-text type="primary">选课学生</el-text>
         </div>
         <el-table :data="chooseRows" :border="true" :header-cell-style="{ textAlign: 'center' }"
-                  :cell-style="{ textAlign: 'center' }" v-loading="chooseLoading" style="margin-top: 8px;">
-          <el-table-column label="序号" width="70">
+                  :cell-style="{ textAlign: 'center' }" v-loading="chooseLoading" style="margin-top: 8px; width: 100%;">
+          <el-table-column label="序号" width="60">
             <template #default="scope">
               {{ scope.$index + 1 }}
             </template>
           </el-table-column>
-          <el-table-column label="学生学号" width="120">
+          <el-table-column label="学生学号" width="110">
             <template #default="scope">
               {{ scope.row.studentNum || '-' }}
             </template>
           </el-table-column>
-          <el-table-column label="姓名" width="140">
+          <el-table-column label="班级" width="100">
+            <template #default="scope">
+              {{ scope.row.className || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="姓名" width="120">
             <template #default="scope">
               {{ scope.row.studentName || '-' }}
             </template>
           </el-table-column>
           <el-table-column label="成绩" width="100">
             <template #default="scope">
-              <span>{{ scope.row.mark ?? '-' }}</span>
+              <div v-if="editingScoreId === scope.row.personId">
+                <el-input-number 
+                  v-model="editingScoreValue" 
+                  :min="0" 
+                  :max="100" 
+                  :precision="1"
+                  size="small"
+                  style="width: 80px"
+                />
+              </div>
+              <div v-else>
+                <span>{{ scope.row.mark ?? '-' }}</span>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column label="班级" width="120">
+          <el-table-column label="操作" width="140" fixed="right">
             <template #default="scope">
-              {{ scope.row.className || '-' }}
+              <div class="operation-buttons" v-if="editingScoreId === scope.row.personId">
+                <el-button type="primary" size="small" @click="saveScore(scope.row)" :loading="savingScore">
+                  <el-icon><Check /></el-icon>
+                  保存
+                </el-button>
+                <el-button size="small" @click="cancelEditScore">
+                  <el-icon><Close /></el-icon>
+                  取消
+                </el-button>
+              </div>
+              <div class="operation-buttons" v-else>
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click="editScore(scope.row)"
+                  :disabled="!scope.row.studentNum"
+                  circle
+                  title="编辑成绩"
+                >
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+                <el-button 
+                  type="danger" 
+                  size="small" 
+                  @click="deleteScore(scope.row)"
+                  :disabled="!scope.row.scoreId || scope.row.mark === null || scope.row.mark === undefined"
+                  circle
+                  title="删除成绩"
+                >
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -106,8 +154,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Document, Connection, Link, Refresh } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Document, Connection, Link, Refresh, Edit, Delete, Check, Close } from '@element-plus/icons-vue'
 import { useCurrentUser } from '~/composables/useCurrentUser'
 import { container } from '~/inverfiy.config'
 import { ITeachingService } from '~/domain/boundaries/teaching-service'
@@ -129,8 +177,14 @@ interface ChooseRow {
   className?: string
   studentName?: string
   mark?: number
+  scoreId?: number  // 添加scoreId字段，用于成绩删除
 }
 const chooseRows = ref<ChooseRow[]>([])
+
+// 成绩编辑相关状态
+const editingScoreId = ref<number | null>(null)
+const editingScoreValue = ref<number>(0)
+const savingScore = ref(false)
 
 // 加载教师授课列表
 const loadTeachingCourses = async () => {
@@ -162,6 +216,8 @@ const loadTeachingCourses = async () => {
 const viewCourseDetails = (course: CourseItem) => {
   selectedCourse.value = course
   detailDialogVisible.value = true
+  // 重置编辑状态
+  cancelEditScore()
   loadCourseChooseRows(course.courseId)
 }
 
@@ -185,14 +241,19 @@ const loadCourseChooseRows = async (courseId: number) => {
       list = res.data.dataList
     }
 
-    let scoreMap: Record<number, { mark?: number; studentNum?: string; studentName?: string }> = {}
+    let scoreMap: Record<number, { mark?: number; studentNum?: string; studentName?: string; scoreId?: number }> = {}
     try {
       const scoreRes = await teachingService.getScoreList(0, courseId)
       if (Array.isArray(scoreRes)) {
         for (const s of scoreRes as any[]) {
           const pid = Number(s.personId || 0)
           if (pid > 0) {
-            scoreMap[pid] = { mark: s.mark, studentNum: s.studentNum, studentName: s.studentName }
+            scoreMap[pid] = { 
+              mark: s.mark, 
+              studentNum: s.studentNum, 
+              studentName: s.studentName,
+              scoreId: s.scoreId  // 保存scoreId用于删除操作
+            }
           }
         }
       }
@@ -208,6 +269,7 @@ const loadCourseChooseRows = async (courseId: number) => {
         className: it.className,
         studentName: score.studentName,
         mark: score.mark,
+        scoreId: score.scoreId,  // 添加scoreId字段
       } as ChooseRow
     })
     if (!chooseRows.value.length) {
@@ -219,6 +281,99 @@ const loadCourseChooseRows = async (courseId: number) => {
   } finally {
     chooseLoading.value = false
   }
+}
+
+// 编辑成绩
+const editScore = (row: ChooseRow) => {
+  editingScoreId.value = row.personId
+  editingScoreValue.value = row.mark ?? 0
+}
+
+// 保存成绩
+const saveScore = async (row: ChooseRow) => {
+  if (!selectedCourse.value) return
+  
+  savingScore.value = true
+  try {
+    // 判断是新增还是修改：如果有scoreId则为修改，否则为新增
+    const isUpdate = row.scoreId !== undefined && row.scoreId !== null
+    
+    // 调用后端API保存成绩
+    const response = await teachingService.scoreSave(
+      isUpdate ? row.scoreId : null, // 有scoreId表示更新，null表示新增
+      row.personId,
+      selectedCourse.value.courseId,
+      editingScoreValue.value
+    )
+    
+    if (response && response.code === 0) {
+      ElMessage.success(isUpdate ? '成绩更新成功' : '成绩添加成功')
+      // 更新本地数据
+      const index = chooseRows.value.findIndex(item => item.personId === row.personId)
+      if (index !== -1) {
+        chooseRows.value[index].mark = editingScoreValue.value
+        // 如果是新增操作，需要更新scoreId（如果后端返回了新的scoreId）
+        if (!isUpdate && response.data && response.data.scoreId) {
+          chooseRows.value[index].scoreId = response.data.scoreId
+        }
+      }
+      cancelEditScore()
+    } else {
+      ElMessage.error(response?.msg || '成绩保存失败')
+    }
+  } catch (error) {
+    console.error('保存成绩失败:', error)
+    ElMessage.error('保存成绩失败，请稍后重试')
+  } finally {
+    savingScore.value = false
+  }
+}
+
+// 删除成绩
+const deleteScore = async (row: ChooseRow) => {
+  if (!selectedCourse.value || !row.scoreId) {
+    ElMessage.warning('无法删除：未找到成绩ID')
+    return
+  }
+  
+  try {
+    // 先确认是否删除
+    await ElMessageBox.confirm(
+      `确定要删除学生 ${row.studentName || row.studentNum} 的成绩吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    // 调用后端API删除成绩 - 使用scoreId而不是personId
+    const response = await teachingService.scoreDelete(row.scoreId)
+    
+    if (response && response.code === 0) {
+      ElMessage.success('成绩删除成功')
+      // 更新本地数据
+      const index = chooseRows.value.findIndex(item => item.personId === row.personId)
+      if (index !== -1) {
+        chooseRows.value[index].mark = undefined
+        chooseRows.value[index].scoreId = undefined  // 同时清除scoreId
+      }
+    } else {
+      ElMessage.error(response?.msg || '成绩删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除成绩失败:', error)
+      ElMessage.error('删除成绩失败，请稍后重试')
+    }
+  }
+}
+
+// 取消编辑
+const cancelEditScore = () => {
+  editingScoreId.value = null
+  editingScoreValue.value = 0
 }
 </script>
 
@@ -286,6 +441,17 @@ const loadCourseChooseRows = async (courseId: number) => {
   .course-detail {
     .el-descriptions {
       margin-top: 10px;
+    }
+  }
+
+  .operation-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    
+    .el-button {
+      margin: 0;
     }
   }
 }
