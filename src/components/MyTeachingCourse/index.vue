@@ -127,7 +127,7 @@
                   type="primary" 
                   size="small" 
                   @click="editScore(scope.row)"
-                  :disabled="!scope.row.studentNum"
+                  :disabled="!scope.row.personId"
                   circle
                   title="编辑成绩"
                 >
@@ -263,11 +263,11 @@ const loadCourseChooseRows = async (courseId: number) => {
       const pid = Number(it.personId || 0)
       const score = pid > 0 ? scoreMap[pid] || {} : {}
       return {
-        courseChooseId: it.courseChooseId,
+        courseChooseId: Number(it.courseChooseId || 0),
         personId: pid,
-        studentNum: score.studentNum,
+        studentNum: score.studentNum ?? it.studentNum,
         className: it.className,
-        studentName: score.studentName,
+        studentName: score.studentName ?? it.studentName,
         mark: score.mark,
         scoreId: score.scoreId,  // 添加scoreId字段
       } as ChooseRow
@@ -300,7 +300,7 @@ const saveScore = async (row: ChooseRow) => {
     
     // 调用后端API保存成绩
     const response = await teachingService.scoreSave(
-      isUpdate ? row.scoreId : null, // 有scoreId表示更新，null表示新增
+      isUpdate ? (row.scoreId ?? null) : null, // 有scoreId表示更新，null表示新增
       row.personId,
       selectedCourse.value.courseId,
       editingScoreValue.value
