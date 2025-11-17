@@ -9,11 +9,11 @@
     <el-form ref="leaveForm" :model="formData" label-width="120px">
       <el-form-item label="请假日期" required>
         <!-- <el-date-picker
-          v-model="formData.leaveDate"
+          v-model="formData.leaveDate"  
           type="date"
           style="width: 100%"
           placeholder="选择请假日期"
-
+          
   /> -->
           <input
             type="date"
@@ -21,7 +21,7 @@
             style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
             placeholder="选择请假日期"
           />
-
+          
       </el-form-item>
       <el-form-item label="请假原因" required>
         <el-input
@@ -117,7 +117,7 @@
           style="width: 150px; margin-right: 10px"
         >
           <el-option label="全部" :value="-1" />
-          <el-option label="待审批" :value="0" />
+          <el-option label="待审批" :value="0" /> 
           <el-option label="教师同意" :value="1" />
           <el-option label="管理员也同意" :value="3" />
         </el-select>
@@ -142,22 +142,15 @@
       <el-table-column label="学生姓名" prop="studentName" width="120" />
       <el-table-column label="请假日期" prop="leaveDate" width="150" />
       <el-table-column label="请假原因" prop="reason" show-overflow-tooltip />
+      <el-table-column label="教师评价" prop="teacherComment" show-overflow-tooltip />
+      <el-table-column label="管理员评价" prop="adminComment" show-overflow-tooltip />
       <el-table-column label="审批教师" prop="teacherName" width="180" />
       <el-table-column label="状态" width="120">
         <template #default="scope">
-          <el-tag
-            :type="
-              scope.row.te === 0
-                ? 'danger'
-                : scope.row.state === 1
-                ? 'warning'
-                : 'success'
-            "
-          >
-            {{ scope.row.stateName }}
-          </el-tag>
-        </template>
-      </el-table-column>
+            {{ scope.row.state === 0 ? '待审批' : scope.row.state === 1 ? '老师通过' : scope.row.state === 3 ? '管理员也通过' : '未知状态' }}
+          
+      </template>
+     </el-table-column>
       <el-table-column label="操作" width="200">
         <template #default="scope">
           <!-- 仅保留编辑和审批按钮-->
@@ -260,7 +253,7 @@ const handleSearch = async () => {
 };
 
 // 新增请假
-const handleAdd = () => {
+const handleAdd = () => {  
   formData.value = presenter.resetForm();
   dialogVisible.value = true;
 };
