@@ -36,24 +36,26 @@
                 <el-aside width="230px" class="sidebar-container">
                     <el-scrollbar class="scrollbar">
                         <el-menu background-color="#FFFFFF" text-color="#000000" active-text-color="#771010" router
-                            :default-openeds="['0']" class="sidebar-menu">
+                            :default-openeds="[]" class="sidebar-menu">
                             <!-- 计算角色特定的菜单列表 -->
                             <template v-for="(v, i) in getRoleSpecificMenuList" :key="i">
-                                <template v-if="v.sList.length > 0">
-                                    <el-sub-menu :index="i.toString()">
+                                <template v-if="v.sList && v.sList.length > 0">
+                                    <el-sub-menu :index="'/' + v.name">
                                         <template v-slot:title>
                                             <i class="el-icon-location"></i>
                                             <span>{{ v.title }}</span>
                                         </template>
-                                        <el-menu-item-group v-for="(item, j) in v.sList" :key="j">
-                                            <el-menu-item :index="'/' + item.path" @click="routerPath(item.path)">{{
-                                                item.title
-                                            }}</el-menu-item>
+                                        <el-menu-item-group>
+                                            <template v-for="(item, j) in v.sList" :key="j">
+                                                <el-menu-item :index="'/' + item.name" @click="routerPath(item.name)">{{
+                                                    item.title
+                                                }}</el-menu-item>
+                                            </template>
                                         </el-menu-item-group>
                                     </el-sub-menu>
                                 </template>
                                 <template v-else>
-                                    <el-menu-item :index="'/' + v.path" @click="routerPath(v.path)">
+                                    <el-menu-item :index="'/' + v.name" @click="routerPath(v.name)">
                                         <i class="el-icon-menu"></i>
                                         <span>{{ v.title }}</span>
                                     </el-menu-item>
@@ -113,102 +115,27 @@ const logout = () => {
 
 
 
-const routerPath = (path: string) => {
-        console.log("routerPath", path);
-        if (path == null || path == undefined || path == "") {
+const routerPath = (name: string) => {
+        console.log("routerPath", name);
+        if (name == null || name == undefined || name == "") {
             return;
         }
-        router.push({ path: "/" + path });
+        // 对于特定的菜单名称进行路径映射
+        const pathMap: Record<string, string> = {
+            'StudentLeave': 'leave'
+        };
+        
+        const targetPath = pathMap[name] || name;
+        const url = `/${targetPath}`;
+        router.push({ path: url });
     };
 
     // 根据角色获取特定的菜单列表
     const getRoleSpecificMenuList = computed(() => {
-        const role = appStore.userInfo.role;
-        const originalMenus = systemConfig.value.menuList;
-        
-        // 创建菜单副本以避免修改原始数据
-        const menuCopy = JSON.parse(JSON.stringify(originalMenus));
-        
-        // 将请假管理从个人信息移动到教务管理
-        moveLeaveMenuToTeaching(menuCopy);
-        
-        // 对于管理员和教师，返回修改后的菜单
-        if (role === 'ROLE_ADMIN' || role === 'ROLE_TEACHER') {
-            return menuCopy;
-        }
-        
-        // 对于学生，添加或修改菜单项
-        if (role === 'ROLE_STUDENT') {
-            // 检查是否已有教务管理菜单
-            let teachingMenuIndex = menuCopy.findIndex((menu: any) => menu.title === '教务管理');
-            
-            if (teachingMenuIndex === -1) {
-                // 如果没有，添加教务管理菜单，只包含选课和成绩查看功能
-                menuCopy.push({
-                    title: '教务管理',
-                    sList: [
-                        { title: '选课管理', path: 'courseChoose' },
-                        { title: '成绩查询', path: 'score' },
-                        { title: '请假管理', path: 'leave' } // 为学生也添加请假管理
-                    ]
-                });
-            } else {
-                // 如果有，修改为包含选课、成绩查看和请假管理功能
-                menuCopy[teachingMenuIndex].sList = [
-                    { title: '选课管理', path: 'courseChoose' },
-                    { title: '成绩查询', path: 'score' },
-                    { title: '请假管理', path: 'leave' } // 为学生也添加请假管理
-                ];
-            }
-            
-            return menuCopy;
-        }
-        
-        // 默认返回修改后的菜单
-        return menuCopy;
+        // 直接返回从系统配置中获取的菜单列表
+        // 不再进行菜单位置的修改，完全使用数据库配置的菜单结构
+        return systemConfig.value.menuList || [];
     });
-    
-    // 将请假管理从个人信息移动到教务管理的方法
-    function moveLeaveMenuToTeaching(menus: any[]) {
-        let personalInfoMenuIndex = -1;
-        let teachingMenuIndex = -1;
-        let leaveMenuIndex = -1;
-        let leaveMenu = null;
-        
-        // 查找个人信息和教务管理菜单
-        menus.forEach((menu, index) => {
-            if (menu.title === '个人信息') {
-                personalInfoMenuIndex = index;
-                // 在个人信息子菜单中查找请假管理
-                if (menu.sList && Array.isArray(menu.sList)) {
-                    leaveMenuIndex = menu.sList.findIndex((subMenu: any) => subMenu.title === '请假管理');
-                    if (leaveMenuIndex !== -1) {
-                        leaveMenu = menu.sList[leaveMenuIndex];
-                    }
-                }
-            } else if (menu.title === '教务管理') {
-                teachingMenuIndex = index;
-            }
-        });
-        
-        // 如果找到了请假管理且找到了教务管理，则移动
-        if (leaveMenu && personalInfoMenuIndex !== -1 && teachingMenuIndex !== -1) {
-            // 从个人信息子菜单中移除请假管理
-            if (menus[personalInfoMenuIndex].sList && leaveMenuIndex !== -1) {
-                menus[personalInfoMenuIndex].sList.splice(leaveMenuIndex, 1);
-            }
-            
-            // 确保教务管理有子菜单数组
-            if (!menus[teachingMenuIndex].sList) {
-                menus[teachingMenuIndex].sList = [];
-            }
-            
-            // 将请假管理添加到教务管理子菜单中
-            if (!menus[teachingMenuIndex].sList.find((subMenu: any) => subMenu.title === '请假管理')) {
-                menus[teachingMenuIndex].sList.push(leaveMenu);
-            }
-        }
-    }
 
 const changeUser = async (type: string) => {
         console.log("type", type);

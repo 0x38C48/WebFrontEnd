@@ -23,7 +23,7 @@
                     <!-- 课程查询组件 -->
                     <el-row :gutter="20" style="margin-bottom: 10px; text-align: right;">
                         <div style="display: inline-flex; align-items: center;">
-                            <el-text style="margin-right: 12px; white-space: nowrap;">课程号或课程名</el-text>
+                            <el-text style="margin-right: 20px; white-space: nowrap; padding-left: 15px;">课程号或课程名</el-text>
                             <el-input v-model="data.numName" style="width:220px;margin-right: 12px;" placeholder="请输入课程号或课程名" />
                             <el-button type="danger" plain @click="doQueryCourseList()">查询</el-button>
                         </div>

@@ -35,12 +35,22 @@ export class FamilyMemberPresenter {
         if (!result) {
             return;
         }
-        const res = await this.service.familyMemberDelete(data.dataList[index].memberId);
-        if (res.code == 0) {
-            this.messageService.success("删除成功");
-            data.dataList.splice(index, 1);
+        
+        const item = data.dataList[index];
+        
+        // 检查是否有memberId：如果有，则调用后端API删除；如果没有，则直接从UI上移除
+        if (item.memberId) {
+            const res = await this.service.familyMemberDelete(item.memberId);
+            if (res.code == 0) {
+                this.messageService.success("删除成功");
+                data.dataList.splice(index, 1);
+            } else {
+                this.messageService.error(res.msg);
+            }
         } else {
-            this.messageService.error(res.msg);
+            // 对于未保存的新行，直接从UI上移除
+            data.dataList.splice(index, 1);
+            this.messageService.success("删除成功");
         }
     };
 

@@ -9,9 +9,11 @@ export interface UserInfo {
 export interface MenuInfo {
   id: number;
   name: string;
-  path: string;
+  path?: string;
   title: string;
-  sList: MenuInfo[];
+  sList?: MenuInfo[];
+  pid?: string | null;
+  user_type_ids?: string;
 }
 export interface SystemConfig {
   menuList: MenuInfo[];

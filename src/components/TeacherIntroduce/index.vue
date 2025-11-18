@@ -242,7 +242,7 @@ const drawEcharts = () => {
     },
     xAxis: {
       type: 'category',
-      data: data.value.courseStat.map(item => item.label),
+      data: data.value.courseStat.map(item => item.title),
       axisLabel: {
         interval: 0,
         rotate: 0
@@ -313,7 +313,7 @@ const drawEcharts = () => {
         }
       },
       data: data.value.courseStat.map(item => ({
-        name: item.label,
+        name: item.title,
         value: item.value
       }))
     }],
