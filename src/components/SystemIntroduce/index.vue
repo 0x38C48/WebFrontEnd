@@ -42,7 +42,7 @@
                     </div>
                 </template>
                 <div style="height: 350px; display: flex; align-items: center; justify-content: center;">
-                    <video src="/app/video.mp4" controls autoplay preload="auto" style="width: 100%; height: 100%; border-radius: 6px;"></video>
+                    <video src="/app/video.mp4" controls autoplay preload="auto" muted style="width: 100%; height: 100%; border-radius: 6px;"></video>
                 </div>
             </el-card>
         </el-col>
