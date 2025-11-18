@@ -164,7 +164,7 @@ import type { CourseItem } from '~/domain/models/teaching';
 
 const presenter = container.get<TeacherIntroducePresenter>(ID_TEACHER_INTRODUCE_PRESENTER);
 const teachingService = container.get<ITeachingService>(ID_TEACHING_SERVICE);
-const data = ref<TeacherIntroduceData>({ info: { personId: 0 } as TeacherItem } as TeacherIntroduceData);
+const data = ref<TeacherIntroduceData>({ authHeader: {}, info: { personId: 0 } as TeacherItem, personId: 0, imgStr: "", courseList: [], courseStat: [], semesterTrend: [] });
 const loading = ref(false);
 const courseLoading = ref(false);
 const courses = ref<CourseItem[]>([]);
